@@ -1,0 +1,68 @@
+# Load required libraries
+require(shiny)
+require(shinyjs)
+require(DT)
+require(ggplot2)
+require(GenomicRanges)
+require(GenomicAlignments)
+require(rtracklayer)
+require(ggbio)
+
+# Load additional functions
+source("lib/control.R")
+source("lib/util.R")
+
+# Load metadata
+metadata <- read.delim("config/metadata.txt")
+rownames(metadata) <- as.character(metadata$sample_id)
+
+# Intialize metadata reactive content
+sources <- unique(as.character(metadata$source))
+datasets <- unique(as.character(metadata$dataset[
+    which(as.character(metadata$source)==sources[1])]))
+classes <- unique(as.character(metadata$class[
+    which(as.character(metadata$source)==sources[1] 
+        & as.character(metadata$dataset)==datasets[1])]))
+genomes <- unique(as.character(metadata$genome))
+genome <- genomes[1]
+
+# Load data file hash
+source("config/data_files.R")
+allClasses <- unique(as.character(metadata$class))
+baseColours <- c("#B40000","#00B400","#0000B4","#B45200","#9B59B6","#21BCBF",
+    "#BC4800","#135C34","#838F00","#4900B5")
+baseColours <- rep(baseColours,length.out=length(allClasses))
+names(baseColours) <- allClasses
+
+# Keep track of loaded annotations and load the first
+load(file.path("genome",genome,"gene.rda"))
+loadedGenomes <- vector("list",length(genomes))
+names(loadedGenomes) <- genomes
+for (gen in genomes) {
+    loadedGenomes[[gen]] <- list(
+        geneNames=NULL,
+        dbGene=NULL,
+        dbExon=NULL
+    )
+}
+geneNames <- names(gene)
+names(geneNames) <- as.character(elementMetadata(gene)$gene_name)
+loadedGenomes[[genome]] <- list(
+    geneNames=geneNames,
+    dbGene=gene,
+    dbExon=NULL
+)
+
+# Keep track of loaded data and load the first
+loadedData <- vector("list",length(sources))
+names(loadedData) <- sources
+for (s in sources) {
+    dd <- unique(as.character(metadata$dataset[
+        which(as.character(metadata$source)==s)]))
+    loadedData[[s]] <- vector("list",length(dd))
+    names(loadedData[[s]]) <- dd
+}
+
+# Restrict the number of cores dedicated to BigSeqCVis
+#RC <- 0.25
+RC <- NULL
