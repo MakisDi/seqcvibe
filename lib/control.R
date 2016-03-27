@@ -952,3 +952,27 @@ calcCoverageFromBW <- function(input,mask,assign.names=TRUE,verbose=TRUE) {
         message("Done!")
     return(coverage) # Rle
 }
+
+loadJBrowse <- function(source,dataset,config,org="hg19") {
+    urlBase <- "http://epigenomics.fleming.gr/bigseqcbrowse/index.html?"
+    
+    tracksBase <- paste("http://epigenomics.fleming.gr/bigseqcvis_tracks",
+        org,sep="/")
+    
+    ind <- which(as.character(config$source)==source 
+        & as.character(config$dataset)==dataset)
+    subconf <- config[ind,]
+    
+    if (!is.null(subconf$alt_id))
+        initTracks <- paste(as.character(subconf$sample_id),
+            as.character(subconf$alt_id),"xy",sep="_")
+    else
+        initTracks <- paste(as.character(subconf$sample_id),"xy",sep="_")
+    
+    initTracks <- c(initTracks,"ucsc_human_hg19","ensGene","refGene")
+    initTracks <- paste(initTracks,collapse=",")
+    
+    query <- paste("data=",tracksBase,"&tracks=",initTracks,sep="");
+    
+    return(paste(urlBase,query,sep=""))
+}
