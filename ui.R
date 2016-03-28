@@ -25,7 +25,22 @@ shinyUI(fluidPage(
         ),
         tags$script(
             src="pace.js"
-        )
+        ),
+        tags$script(HTML(
+			"$(function() {
+				setTimeout(function() {
+				var vals = [0,1e-16,1e-8,1e-4,0.001,0.005,0.01,0.02,0.03,0.04,
+					0.05,0.1,0.2,0.3,0.4,0.5,1];
+				$('#pvalue').data('ionRangeSlider').update({
+					'values': vals,
+					'from': 10
+				});
+				$('#fdr').data('ionRangeSlider').update({
+					'values': vals,
+					'from': 10
+				});
+			},5)})"
+        ))
     ),
     navbarPage(
         title="BigSeqCVis (beta)",

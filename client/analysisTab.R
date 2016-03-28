@@ -90,13 +90,94 @@ differentialExpressionTabPanel <- function() {
 						)
 					 )
 				))
+			),
+			wellPanel(
+				fluidRow(column(12,
+					radioButtons(
+						inputId="statThresholdType",
+						label="Statistical score threshold",
+						inline=TRUE,
+						choices=c(
+							"p-value"="pvalue",
+							"FDR"="fdr"
+						)
+					),
+					conditionalPanel(
+						condition="input.statThresholdType=='pvalue'",
+						sliderInput(
+							inputId="pvalue",
+							label="p-value",
+							min=0,
+							max=1,
+							value=0.05,
+							step=0.01
+						)
+					),
+					conditionalPanel(
+						condition="input.statThresholdType=='fdr'",
+						sliderInput(
+							inputId="fdr",
+							label="FDR",
+							min=0,
+							max=1,
+							value=0.05,
+							step=0.01
+						)
+					)
+				)),
+				fluidRow(column(12,
+					radioButtons(
+						inputId="foldThresholdType",
+						label="Fold threshold",
+						inline=TRUE,
+						choices=c(
+							"Natural scale"="natural",
+							"log2 scale"="log2"
+						)
+					),
+					conditionalPanel(
+						condition="input.foldThresholdType=='natural'",
+						sliderInput(
+							inputId="fcNatural",
+							label="Fold change (natural)",
+							min=0,
+							max=10,
+							value=c(0.5,2),
+							step=0.5
+						)
+					),
+					conditionalPanel(
+						condition="input.foldThresholdType=='log2'",
+						sliderInput(
+							inputId="fcLog",
+							label="Fold change (log2)",
+							min=-5,
+							max=5,
+							value=c(-1,1),
+							step=0.5
+						)
+					)
+				)),
+				fluidRow(column(12,
+					htmlOutput("setDeChrs")
+				)),
+				fluidRow(column(12,
+					div(style="font-weight:bold","Filter by gene biotype"),
+					checkboxInput(
+						inputId="rnaDeAnalyzedBiotypeFilter",
+						label="Biotype expression filtering",
+						value=FALSE
+					),
+					conditionalPanel(
+						condition="input.rnaDeAnalyzedBiotypeFilter",
+						htmlOutput("checkboxBiotypeListAnalyzedRna")
+					)
+				))
 			)
 		))
 	),column(9,
 		fluidRow(column(12,
-			wellPanel(
-				htmlOutput("rnaDeMAPlot")
-			)
+			plotOutput("rnaDeMAPlot",height="640px")
 		))
 	))
 }

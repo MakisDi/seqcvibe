@@ -109,6 +109,28 @@ initReactiveVars <- function() {
 		lengths=NULL
 	)
 	
+	maPlots <- reactiveValues(
+		maPlot=ggplot(data=data.frame(x=1:100,y=1:100)) + 
+			geom_text(data=data.frame(x=50,y=50,
+				label="Resulting MA plots will\nbe displayed here"),
+				aes(x=x,y=y,label=label),size=10) +
+			theme(
+				axis.line=element_blank(),
+				axis.text.x=element_blank(),
+				axis.text.y=element_blank(),
+				axis.ticks=element_blank(),
+				axis.title.x=element_blank(),
+				axis.title.y=element_blank(),
+				legend.position="none",
+				panel.background=element_blank(),
+				panel.border=element_blank(),
+				panel.grid.major=element_blank(),
+				panel.grid.minor=element_blank(),
+				plot.background=element_blank()
+			),
+		rendered=TRUE
+	)
+	
 	return(list(
 		currentMetadata=currentMetadata,
 		currentGenes=currentGenes,
@@ -120,7 +142,8 @@ initReactiveVars <- function() {
 		areaPlots=areaPlots,
 		currentTables=currentTables,
 		customRnaRegions=customRnaRegions,
-		currentCustomRnaTables=currentCustomRnaTables
+		currentCustomRnaTables=currentCustomRnaTables,
+		maPlots=maPlots
 	))
 }
 
