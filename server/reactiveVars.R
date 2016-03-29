@@ -131,6 +131,8 @@ initReactiveVars <- function() {
 		rendered=TRUE
 	)
 	
+	currentMdsTables <- reactiveValues()
+	
 	return(list(
 		currentMetadata=currentMetadata,
 		currentGenes=currentGenes,
@@ -143,7 +145,8 @@ initReactiveVars <- function() {
 		currentTables=currentTables,
 		customRnaRegions=customRnaRegions,
 		currentCustomRnaTables=currentCustomRnaTables,
-		maPlots=maPlots
+		maPlots=maPlots,
+		currentMdsTables=currentMdsTables
 	))
 }
 
