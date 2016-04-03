@@ -379,6 +379,7 @@ dataSelectorTabPanelRenderUI <- function(output,session,allReactiveVars,
 dataSelectorTabPanelObserve <- function(input,output,session,
 	allReactiveVars,allReactiveMsgs) {
 	currentMetadata <- allReactiveVars$currentMetadata
+	dataSelectorMessages <- allReactiveMsgs$dataSelectorMessages
 	
 	dataSelectorTabPanelReactiveEvents <- 
 		dataSelectorTabPanelEventReactive(input,output,session,
@@ -404,7 +405,24 @@ dataSelectorTabPanelObserve <- function(input,output,session,
 		allReactiveMsgs)
 	
 	observe({
-		loadDataset()
+		#tryCatch({
+		#	shinyjs::disable("loadDataset")
+			loadDataset()
+		#},error=function(e) {
+		#	s <- currentMetadata$source
+		#	d <- currentMetadata$dataset
+		#	dataSelectorMessages <- updateMessages(
+		#		dataSelectorMessages,
+		#		type="ERROR",
+		#		msg=paste(getTime("ERROR"),
+		#			"Error while loading dataset ",d," from ",s,". Please ",
+		#			"try loading again and if it fails contact the ",
+		#			"administrator with the following error: ",e,sep="")
+		#	)
+		#},
+		#finally={
+		#	shinyjs::enable("loadDataset")
+		#})
 	})
 	
 	observe({

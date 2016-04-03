@@ -93,10 +93,6 @@ expressionExplorerTabPanelRenderUI <- function(output,session,
             c <- unique(as.character(M$class))
             #countDataTables()
             dbGene <- loadedGenomes[[currentMetadata$genome]]$dbGene
-            #M <- currentMetadata$final
-            #s <- unique(as.character(M$source))
-            #d <- unique(as.character(M$dataset))
-            #c <- unique(as.character(M$class))
             lapply(c,function(x,M,D) {
                 samples <- as.character(M[which(as.character(M$class)==x),
                     "sample_id"])

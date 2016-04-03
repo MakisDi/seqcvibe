@@ -136,9 +136,22 @@ initReactiveVars <- function() {
         counts=NULL,
         flags=NULL,
         classList=NULL,
-        contastList=NULL,
+        contrastList=NULL,
         pValue=NULL,
         fdr=NULL
+    )
+    
+    currentRnaDeTable <- reactiveValues(
+		totalTable=NULL,
+		tableFilters=list(
+			p=0.05,
+			fdr=0.05,
+			scale="natural",
+			fc=c(0.5,2),
+			bt=NULL,
+			genes=NULL,
+			chr=NULL
+		)
     )
     
     currentMdsTables <- reactiveValues()
@@ -156,6 +169,8 @@ initReactiveVars <- function() {
         customRnaRegions=customRnaRegions,
         currentCustomRnaTables=currentCustomRnaTables,
         maPlots=maPlots,
+        currentPipelineOutput=currentPipelineOutput,
+        currentRnaDeTable=currentRnaDeTable,
         currentMdsTables=currentMdsTables
     ))
 }

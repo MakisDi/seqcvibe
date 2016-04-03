@@ -1,3 +1,94 @@
+makeFoldChange <- function(contrast,sample.list,data.matrix,log.offset=1) {
+    conds <- strsplit(contrast,"_vs_")[[1]]
+    fold.mat <- matrix(0,nrow(data.matrix),length(conds)-1)
+    for (i in 1:(length(conds)-1)) { # Last condition is ALWAYS reference
+        samples.nom <- sample.list[[conds[i]]]
+        samples.denom <- sample.list[[conds[length(conds)]]]
+        nom <- data.matrix[,match(samples.nom,colnames(data.matrix)),drop=FALSE]
+        denom <- data.matrix[,match(samples.denom,colnames(data.matrix)),
+            drop=FALSE]
+        if (!is.matrix(nom)) 
+            nom <- as.matrix(nom) # Cover the case with no replicates...
+        if (!is.matrix(denom)) 
+            denom <- as.matrix(denom)
+        mean.nom <- apply(nom,1,mean)
+        mean.denom <- apply(denom,1,mean)
+        if (any(mean.nom==0)) 
+            mean.nom <- mean.nom + log.offset
+        if (any(mean.denom==0)) 
+            mean.denom <- mean.denom + log.offset
+        fold.mat[,i] <- mean.nom/mean.denom
+    }
+    rownames(fold.mat) <- rownames(data.matrix)
+    colnames(fold.mat) <- paste(conds[1:(length(conds)-1)],"_vs_",
+        conds[length(conds)],sep="")
+    return(fold.mat)
+}
+
+makeA <- function(contrast,sample.list,data.matrix,log.offset=1) {
+    conds <- strsplit(contrast,"_vs_")[[1]]
+    a.mat <- matrix(0,nrow(data.matrix),length(conds)-1)
+    for (i in 1:(length(conds)-1)) { # Last condition is ALWAYS reference
+        samples.trt <- sample.list[[conds[i]]]
+        samples.cnt <- sample.list[[conds[length(conds)]]]
+        trt <- data.matrix[,match(samples.trt,colnames(data.matrix)),drop=FALSE]
+        cnt <- data.matrix[,match(samples.cnt,colnames(data.matrix)),drop=FALSE]
+        if (!is.matrix(trt)) 
+            trt <- as.matrix(trt) # Cover the case with no replicates...
+        if (!is.matrix(cnt)) 
+            cnt <- as.matrix(cnt)
+        mean.trt <- apply(trt,1,mean)
+        mean.cnt <- apply(cnt,1,mean)
+        if (any(mean.trt==0)) 
+            mean.trt <- mean.trt + log.offset
+        if (any(mean.cnt==0)) 
+            mean.cnt <- mean.cnt + log.offset
+        a.mat[,i] <- 0.5*(log2(mean.trt)+log2(mean.cnt))
+    }
+    rownames(a.mat) <- rownames(data.matrix)
+    colnames(a.mat) <- paste(conds[1:(length(conds)-1)],"_vs_",
+        conds[length(conds)],sep="")
+    return(a.mat)
+}
+
+makeStat <- function(samples,data.mat,stat) {    
+    stat.data <- data.mat[,match(samples,colnames(data.mat))]
+    if (!is.matrix(stat.data)) 
+        stat.data <- as.matrix(stat.data)
+    switch(stat,
+        mean = {
+            return(apply(stat.data,1,function(x) {
+                return(as.integer(round(mean(x))))
+            }))
+        },
+        median = {
+            stat.calc <- apply(stat.data,1,function(x) {
+                return(as.integer(round(median(x))))
+            })
+        },
+        sd = {
+            return(apply(stat.data,1,function(x) {
+                return(as.integer(round(sd(x))))
+            }))
+        },
+        mad = {
+            return(apply(stat.data,1,function(x) {
+                return(as.integer(round(mad(x))))
+            }))
+        },
+        cv = {
+            return(apply(stat.data,1,function(x,s) {
+                return(round(sd(x))/round(mean(x)))
+            }))
+        },
+        rcv = {
+            return(apply(stat.data,1,function(x,s) {
+                return(round(mad(x))/round(median(x))) 
+            }))
+        }
+    )
+}
+
 updateMessages <- function(messageContainer,type,msg,clear=FALSE) {
     if (clear)
         messageContainer$messages <- list(
