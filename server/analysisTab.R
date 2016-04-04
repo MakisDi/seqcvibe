@@ -97,9 +97,9 @@ diffExprTabPanelEventReactive <- function(input,output,session,
                 length=as.numeric(input$rnaDeGeneLengthFilterValue)
             ),
             avg.reads=list(
-				average.per.bp=100,
-				quantile=0.25
-			),
+                average.per.bp=100,
+                quantile=0.25
+            ),
             expression=exprFilt, 
             biotype=btFilt
         )
@@ -150,7 +150,7 @@ diffExprTabPanelEventReactive <- function(input,output,session,
     })
     
     return(list(
-		runPipeline=runPipeline
+        runPipeline=runPipeline
     ))
 }
 
@@ -161,7 +161,7 @@ diffExprTabPanelReactive <- function(input,output,session,
     currentRnaDeTable <- allReactiveVars$currentRnaDeTable
     
     rnaDeTotalTable <- reactive({
-		s <- unique(as.character(currentMetadata$source))
+        s <- unique(as.character(currentMetadata$source))
         d <- unique(as.character(currentMetadata$dataset))
         
         ann <- currentPipelineOutput$annotation
@@ -171,109 +171,110 @@ diffExprTabPanelReactive <- function(input,output,session,
         contrastList <- currentPipelineOutput$contrastList
         pValue <- currentPipelineOutput$pValue
         fdr <- currentPipelineOutput$fdr
-		
+        
         if (!is.null(counts)) {
-			p <- pValue[[contrastList[1]]][,1,drop=FALSE]
-			fdr <- fdr[[contrastList[1]]][,1,drop=FALSE]
-			
-			filters <- currentRnaDeTable$tableFilters
-			filterInds <- list(
-				stat=rownames(counts),
-				fold=rownames(counts),
-				chr=rownames(counts),
-				bt=rownames(counts)
-			)
-			
-			# Gradual application of filters for faster rendering
-			# 1. Chromosomes
-			tmp <- rownames(counts)
-			if (!is.null(filters$chr))
-				tmp <- 
-					names(which(as.character(ann$chromosome) %in% filters$chr))
-			if (length(tmp)>0)
-				filterInds$chr <- tmp
-			# 2. Biotypes
-			if (!is.null(filters$bt))
-				tmp <- names(which(as.character(ann$biotype) %in% filters$bt))
-			if (length(tmp)>0)
-				filterInds$bt <- tmp
-			
-			# 3. Statistical score
-			if (input$statThresholdType=="pvalue")
-				tmp <- names(which(p[,1]<filters$p))
-			else if (input$statThresholdType=="fdr")
-				tmp <- names(which(fdr[,1]<filters$fdr))
-			if (length(tmp)>0)
-				filterInds$stat <- tmp
-				
-			# Gather so far
-			sofar <- Reduce("intersect",filterInds[c("stat","chr","bt")])
-			sumTable <- data.frame(
-				pvalue=p[sofar,,drop=FALSE],
-				fdr=fdr[sofar,,drop=FALSE]
-			)
-			names(sumTable) <- c("pvalue","fdr")
-			ann <- ann[sofar,]
-			flags <- flags[sofar,]
-			
-			# Proceed with count table procesing
-			tab <- counts[sofar,,drop=FALSE]
-			switch(input$rnaDeValueCompRadio,
-				counts = {
-					tab <- tab
-				},
-				rpkm = {
-					len <- loadedData[[s]][[d]]$length[sofar]
-					libsize=unlist(loadedData[[s]][[d]]$libsize[colnames(tab)])
-					tab <- round(edgeR::rpkm(tab,gene.length=len,
-						lib.size=libsize),digits=6)
-				},
-				rpgm = {
-					len <- loadedData[[s]][[d]]$length[sofar]
-					for (j in 1:ncol(tab))
-						tab[,j] <- round(tab[,j]/len,digits=6)
-				}
-			)
-			switch(input$rnaDeValueScaleRadio,
-				natural = {
-					tab <- tab
-				},
-				log2 = {
-					tab <- round(log2(tab+1),digits=6)
-				}
-			)
-			
-			fcMat <- round(makeFoldChange(contrastList[1],classList,tab),6)
-			tmp <- names(which(apply(fcMat,1,function(x,f) {
-				return(any(x<=f[1] | x>=f[2]))
-			},filters$fc)))
-			if (length(tmp)>0)
-				filterInds$fold <- tmp
-			else
-				filterInds$fold <- sofar
-				
-			tab <- tab[filterInds$fold,,drop=FALSE]
-			fcMat <- fcMat[filterInds$fold,,drop=FALSE]
-			
-			avgMatrix <- do.call("cbind",lapply(classList,function(x,tab,stat) {
-				makeStat(x,tab,stat)
-			},tab,input$rnaDeValueAverageRadio))
-			colnames(avgMatrix) <- paste(names(classList),
-				input$rnaDeValueAverageRadio)
-			
-			stdMatrix <- do.call("cbind",lapply(classList,function(x,tab,stat) {
-				makeStat(x,tab,stat)
-			},tab,input$rnaDeValueDeviationRadio))
-			colnames(stdMatrix) <- paste(names(classList),
-				input$rnaDeValueDeviationRadio)
-			
-			totalTable <- cbind(
-				ann[filterInds$fold,],
-				sumTable[filterInds$fold,],
-				fcMat,
-				as.data.frame(avgMatrix),
-				as.data.frame(stdMatrix),
-				as.data.frame(flags[filterInds$fold,])
+            p <- pValue[[contrastList[1]]][,1,drop=FALSE]
+            fdr <- fdr[[contrastList[1]]][,1,drop=FALSE]
+            
+            filters <- currentRnaDeTable$tableFilters
+            filterInds <- list(
+                stat=rownames(counts),
+                fold=rownames(counts),
+                chr=rownames(counts),
+                bt=rownames(counts)
+            )
+            
+            # Gradual application of filters for faster rendering
+            # 1. Chromosomes
+            tmp <- rownames(counts)
+            if (!is.null(filters$chr))
+                tmp <- 
+                    names(which(as.character(ann$chromosome) %in% filters$chr))
+            if (length(tmp)>0)
+                filterInds$chr <- tmp
+            # 2. Biotypes
+            if (!is.null(filters$bt))
+                tmp <- names(which(as.character(ann$biotype) %in% filters$bt))
+            if (length(tmp)>0)
+                filterInds$bt <- tmp
+            
+            # 3. Statistical score
+            if (input$statThresholdType=="pvalue")
+                tmp <- names(which(p[,1]<filters$p))
+            else if (input$statThresholdType=="fdr")
+                tmp <- names(which(fdr[,1]<filters$fdr))
+            if (length(tmp)>0)
+                filterInds$stat <- tmp
+                
+            # Gather so far
+            sofar <- Reduce("intersect",filterInds[c("stat","chr","bt")])
+            sumTable <- data.frame(
+                pvalue=p[sofar,,drop=FALSE],
+                fdr=fdr[sofar,,drop=FALSE]
+            )
+            names(sumTable) <- c("pvalue","fdr")
+            ann <- ann[sofar,]
+            flags <- flags[sofar,]
+            
+            # Proceed with count table procesing
+            tab <- counts[sofar,,drop=FALSE]
+            switch(input$rnaDeValueCompRadio,
+                counts = {
+                    tab <- tab
+                },
+                rpkm = {
+                    len <- loadedData[[s]][[d]]$length[sofar]
+                    libsize=unlist(loadedData[[s]][[d]]$libsize[colnames(tab)])
+                    tab <- round(edgeR::rpkm(tab,gene.length=len,
+                        lib.size=libsize),digits=6)
+                },
+                rpgm = {
+                    len <- loadedData[[s]][[d]]$length[sofar]
+                    for (j in 1:ncol(tab))
+                        tab[,j] <- round(tab[,j]/len,digits=6)
+                }
+            )
+            switch(input$rnaDeValueScaleRadio,
+                natural = {
+                    tab <- tab
+                },
+                log2 = {
+                    tab <- round(log2(tab+1),digits=6)
+                }
+            )
+            
+            fcMat <- round(makeFoldChange(contrastList[1],classList,tab,
+                input$rnaDeValueScaleRadio),6)
+            tmp <- names(which(apply(fcMat,1,function(x,f) {
+                return(any(x<=f[1] | x>=f[2]))
+            },filters$fc)))
+            if (length(tmp)>0)
+                filterInds$fold <- tmp
+            else
+                filterInds$fold <- sofar
+                
+            tab <- tab[filterInds$fold,,drop=FALSE]
+            fcMat <- fcMat[filterInds$fold,,drop=FALSE]
+            
+            avgMatrix <- do.call("cbind",lapply(classList,function(x,tab,s,v) {
+                makeStat(x,tab,s,v)
+            },tab,input$rnaDeValueAverageRadio,input$rnaDeValueCompRadio))
+            colnames(avgMatrix) <- paste(names(classList),
+                input$rnaDeValueAverageRadio)
+            
+            stdMatrix <- do.call("cbind",lapply(classList,function(x,tab,s,v) {
+                makeStat(x,tab,s,v)
+            },tab,input$rnaDeValueDeviationRadio,input$rnaDeValueCompRadio))
+            colnames(stdMatrix) <- paste(names(classList),
+                input$rnaDeValueDeviationRadio,input$rnaDeValueCompRadio)
+            
+            totalTable <- cbind(
+                ann[filterInds$fold,],
+                sumTable[filterInds$fold,],
+                fcMat,
+                as.data.frame(avgMatrix),
+                as.data.frame(stdMatrix),
+                as.data.frame(flags[filterInds$fold,])
             )
             
             currentRnaDeTable$totalTable <- totalTable
@@ -281,224 +282,251 @@ diffExprTabPanelReactive <- function(input,output,session,
     })
     
     handleRnaDeAnalysisSummarySelection <- reactive({
-		observeEvent(input$clearRnaDeSummarySelection,{
-			proxy <- dataTableProxy("rnaDeAnalysisSummaryTable")
-			selectRows(proxy,NULL)
-		})
+        observeEvent(input$clearRnaDeSummarySelection,{
+            proxy <- dataTableProxy("rnaDeAnalysisSummaryTable")
+            selectRows(proxy,NULL)
+        })
         
-		observeEvent(input$invertRnaDeSummarySelection,{
-			N <- input$rnaDeAnalysisSummaryTable_rows_all
-			sel <- input$rnaDeAnalysisSummaryTable_rows_selected
-			if (length(sel)>0) {
-				N <- N[-sel]
-				proxy <- dataTableProxy("rnaDeAnalysisSummaryTable")
-				selectRows(proxy,N)
-			}
-		})
+        observeEvent(input$invertRnaDeSummarySelection,{
+            N <- input$rnaDeAnalysisSummaryTable_rows_all
+            sel <- input$rnaDeAnalysisSummaryTable_rows_selected
+            if (length(sel)>0) {
+                N <- N[-sel]
+                proxy <- dataTableProxy("rnaDeAnalysisSummaryTable")
+                selectRows(proxy,N)
+            }
+        })
     })
     
     handleRnaDeAnalysisAnnotationSelection <- reactive({
-		observeEvent(input$clearRnaDeAnnotationSelection,{
-			proxy <- dataTableProxy("rnaDeAnalysisAnnotationTable")
-			selectRows(proxy,NULL)
-		})
+        observeEvent(input$clearRnaDeAnnotationSelection,{
+            proxy <- dataTableProxy("rnaDeAnalysisAnnotationTable")
+            selectRows(proxy,NULL)
+        })
         
-		observeEvent(input$invertRnaDeAnnotationSelection,{
-			N <- input$rnaDeAnalysisAnnotationTable_rows_all
-			sel <- input$rnaDeAnalysisAnnotationTable_rows_selected
-			if (length(sel)>0) {
-				N <- N[-sel]
-				proxy <- dataTableProxy("rnaDeAnalysisAnnotationTable")
-				selectRows(proxy,N)
-			}
-		})
+        observeEvent(input$invertRnaDeAnnotationSelection,{
+            N <- input$rnaDeAnalysisAnnotationTable_rows_all
+            sel <- input$rnaDeAnalysisAnnotationTable_rows_selected
+            if (length(sel)>0) {
+                N <- N[-sel]
+                proxy <- dataTableProxy("rnaDeAnalysisAnnotationTable")
+                selectRows(proxy,N)
+            }
+        })
     })
     
     handleRnaDeAnalysisFlagsSelection <- reactive({
-		observeEvent(input$clearRnaDeFlagsSelection,{
-			proxy <- dataTableProxy("rnaDeAnalysisFlagsTable")
-			selectRows(proxy,NULL)
-		})
+        observeEvent(input$clearRnaDeFlagsSelection,{
+            proxy <- dataTableProxy("rnaDeAnalysisFlagsTable")
+            selectRows(proxy,NULL)
+        })
         
-		observeEvent(input$invertRnaDeFlagsSelection,{
-			N <- input$rnaDeAnalysisFlagsTable_rows_all
-			sel <- input$rnaDeAnalysisFlagsTable_rows_selected
-			if (length(sel)>0) {
-				N <- N[-sel]
-				proxy <- dataTableProxy("rnaDeAnalysisFlagsTable")
-				selectRows(proxy,N)
-			}
-		})
+        observeEvent(input$invertRnaDeFlagsSelection,{
+            N <- input$rnaDeAnalysisFlagsTable_rows_all
+            sel <- input$rnaDeAnalysisFlagsTable_rows_selected
+            if (length(sel)>0) {
+                N <- N[-sel]
+                proxy <- dataTableProxy("rnaDeAnalysisFlagsTable")
+                selectRows(proxy,N)
+            }
+        })
     })
     
     handleRnaDeAnalysisAllSelection <- reactive({
-		observeEvent(input$clearRnaDeAllSelection,{
-			proxy <- dataTableProxy("rnaDeAnalysisAllTable")
-			selectRows(proxy,NULL)
-		})
+        observeEvent(input$clearRnaDeAllSelection,{
+            proxy <- dataTableProxy("rnaDeAnalysisAllTable")
+            selectRows(proxy,NULL)
+        })
         
-		observeEvent(input$invertRnaDeAllSelection,{
-			N <- input$rnaDeAnalysisAllTable_rows_all
-			sel <- input$rnaDeAnalysisAllTable_rows_selected
-			if (length(sel)>0) {
-				N <- N[-sel]
-				proxy <- dataTableProxy("rnaDeAnalysisAllTable")
-				selectRows(proxy,N)
-			}
-		})
+        observeEvent(input$invertRnaDeAllSelection,{
+            N <- input$rnaDeAnalysisAllTable_rows_all
+            sel <- input$rnaDeAnalysisAllTable_rows_selected
+            if (length(sel)>0) {
+                N <- N[-sel]
+                proxy <- dataTableProxy("rnaDeAnalysisAllTable")
+                selectRows(proxy,N)
+            }
+        })
     })
     
     handleRnaDeAnalysisSummaryDownload <- reactive({
-		output$exportRnaDeSummarySelection <- 
-			downloadHandler(
-				filename=function() {
-					tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
-					paste("diffexpr_summary_",tt,".txt", sep='')
-				},
-				content=function(con) {
-					sel <- input$rnaDeAnalysisSummaryTable_rows_selected
-					if (length(sel)>0) {
-						totalTable <- currentRnaDeTable$totalTable
-						res <- totalTable[,c("gene_name","pvalue","fdr")]
-						fcInd <- grep("_vs_",names(totalTable))
-						avgInd <- grep("mean|median",colnames(totalTable),
-							perl=TRUE)
-						devInd <- grep("sd|mad|IQR",colnames(totalTable),
-							perl=TRUE)
-						res <- cbind(res,totalTable[,c(fcInd,avgInd,devInd)]) 
-						write.table(res[sel,],file=con,sep="\t",quote=FALSE,
-							col.names=NA)
-					}
-				}
-			)
-			
-		output$exportRnaDeSummaryAll <- downloadHandler(
-			filename=function() {
-				tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
-				paste("diffexpr_summary_",tt,".txt", sep='')
-			},
-			content=function(con) {
-				totalTable <- currentRnaDeTable$totalTable
-				res <- totalTable[,c("gene_name","pvalue","fdr")]
-				fcInd <- grep("_vs_",names(totalTable))
-				avgInd <- grep("mean|median",colnames(totalTable),
-					perl=TRUE)
-				devInd <- grep("sd|mad|IQR",colnames(totalTable),
-					perl=TRUE)
-				res <- cbind(res,totalTable[,c(fcInd,avgInd,devInd)])
-				write.table(res,file=con,sep="\t",quote=FALSE,col.names=NA)
-			}
-		)
+        output$exportRnaDeSummarySelection <- 
+            downloadHandler(
+                filename=function() {
+                    tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+                    paste("diffexpr_summary_",tt,".txt", sep='')
+                },
+                content=function(con) {
+                    sel <- input$rnaDeAnalysisSummaryTable_rows_selected
+                    if (length(sel)>0) {
+                        totalTable <- currentRnaDeTable$totalTable
+                        res <- totalTable[,c("gene_name","pvalue","fdr")]
+                        fcInd <- grep("_vs_",names(totalTable))
+                        avgInd <- grep("mean|median",colnames(totalTable),
+                            perl=TRUE)
+                        devInd <- grep("sd|mad|IQR",colnames(totalTable),
+                            perl=TRUE)
+                        res <- cbind(res,totalTable[,c(fcInd,avgInd,devInd)]) 
+                        write.table(res[sel,],file=con,sep="\t",quote=FALSE,
+                            row.names=FALSE)
+                    }
+                }
+            )
+            
+        output$exportRnaDeSummaryAll <- downloadHandler(
+            filename=function() {
+                tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+                paste("diffexpr_summary_",tt,".txt", sep='')
+            },
+            content=function(con) {
+                totalTable <- currentRnaDeTable$totalTable
+                res <- totalTable[,c("gene_name","pvalue","fdr")]
+                fcInd <- grep("_vs_",names(totalTable))
+                avgInd <- grep("mean|median",colnames(totalTable),
+                    perl=TRUE)
+                devInd <- grep("sd|mad|IQR",colnames(totalTable),
+                    perl=TRUE)
+                res <- cbind(res,totalTable[,c(fcInd,avgInd,devInd)])
+                write.table(res,file=con,sep="\t",quote=FALSE,row.names=FALSE)
+            }
+        )
     })
     
     handleRnaDeAnalysisAnnotationDownload <- reactive({
-		output$exportRnaDeAnnotationSelection <- 
-			downloadHandler(
-				filename=function() {
-					tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
-					paste("diffexpr_annotation_",tt,".txt", sep='')
-				},
-				content=function(con) {
-					sel <- input$rnaDeAnalysisAnnotationTable_rows_selected
-					if (length(sel)>0) {
-						totalTable <- currentRnaDeTable$totalTable
-						res <- totalTable[,c("chromosome","start","end",
-							"gene_id","strand","gene_name","biotype")]
-						write.table(res[sel,],file=con,sep="\t",quote=FALSE,
-							col.names=NA)
-					}
-				}
-			)
-			
-		output$exportRnaDeAnnotationAll <- downloadHandler(
-			filename=function() {
-				tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
-				paste("diffexpr_annotation_",tt,".txt", sep='')
-			},
-			content=function(con) {
-				totalTable <- currentRnaDeTable$totalTable
-				res <- totalTable[,c("chromosome","start","end","gene_id",
-					"strand","gene_name","biotype")]
-				write.table(res,file=con,sep="\t",quote=FALSE,col.names=NA)
-			}
-		)
+        output$exportRnaDeAnnotationSelection <- 
+            downloadHandler(
+                filename=function() {
+                    tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+                    paste("diffexpr_annotation_",tt,".txt", sep='')
+                },
+                content=function(con) {
+                    sel <- input$rnaDeAnalysisAnnotationTable_rows_selected
+                    if (length(sel)>0) {
+                        totalTable <- currentRnaDeTable$totalTable
+                        res <- totalTable[,c("chromosome","start","end",
+                            "gene_id","strand","gene_name","biotype")]
+                        write.table(res[sel,],file=con,sep="\t",quote=FALSE,
+                            row.names=FALSE)
+                    }
+                }
+            )
+            
+        output$exportRnaDeAnnotationAll <- downloadHandler(
+            filename=function() {
+                tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+                paste("diffexpr_annotation_",tt,".txt", sep='')
+            },
+            content=function(con) {
+                totalTable <- currentRnaDeTable$totalTable
+                res <- totalTable[,c("chromosome","start","end","gene_id",
+                    "strand","gene_name","biotype")]
+                write.table(res,file=con,sep="\t",quote=FALSE,row.names=FALSE)
+            }
+        )
     })
     
     handleRnaDeAnalysisFlagsDownload <- reactive({
-		output$exportRnaDeFlagsSelection <- 
-			downloadHandler(
-				filename=function() {
-					tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
-					paste("diffexpr_flags_",tt,".txt", sep='')
-				},
-				content=function(con) {
-					sel <- input$rnaDeAnalysisFlagsTable_rows_selected
-					if (length(sel)>0) {
-						totalTable <- currentRnaDeTable$totalTable
-						res <- totalTable[,c("LN","MD","MN","QN","KN","BT")] 
-						write.table(res[sel,],file=con,sep="\t",quote=FALSE,
-							col.names=NA)
-					}
-				}
-			)
-			
-		output$exportRnaDeFlagsAll <- downloadHandler(
-			filename=function() {
-				tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
-				paste("diffexpr_flags_",tt,".txt", sep='')
-			},
-			content=function(con) {
-				totalTable <- currentRnaDeTable$totalTable
-				res <- totalTable[,c("LN","MD","MN","QN","KN","BT")]
-				write.table(res,file=con,sep="\t",quote=FALSE,col.names=NA)
-			}
-		)
+        output$exportRnaDeFlagsSelection <- 
+            downloadHandler(
+                filename=function() {
+                    tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+                    paste("diffexpr_flags_",tt,".txt", sep='')
+                },
+                content=function(con) {
+                    sel <- input$rnaDeAnalysisFlagsTable_rows_selected
+                    if (length(sel)>0) {
+                        totalTable <- currentRnaDeTable$totalTable
+                        res <- totalTable[,c("gene_name","LN","MD","MN","QN",
+                            "KN","BT")] 
+                        write.table(res[sel,],file=con,sep="\t",quote=FALSE,
+                            row.names=FALSE)
+                    }
+                }
+            )
+            
+        output$exportRnaDeFlagsAll <- downloadHandler(
+            filename=function() {
+                tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+                paste("diffexpr_flags_",tt,".txt", sep='')
+            },
+            content=function(con) {
+                totalTable <- currentRnaDeTable$totalTable
+                res <- totalTable[,c("gene_name","LN","MD","MN","QN","KN","BT")]
+                write.table(res,file=con,sep="\t",quote=FALSE,row.names=FALSE)
+            }
+        )
     })
     
     handleRnaDeAnalysisAllDownload <- reactive({
-		output$exportRnaDeAllSelection <- 
-			downloadHandler(
-				filename=function() {
-					tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
-					paste("diffexpr_summary_",tt,".txt", sep='')
-				},
-				content=function(con) {
-					sel <- input$rnaDeAnalysisAllTable_rows_selected
-					if (length(sel)>0) {
-						totalTable <- currentRnaDeTable$totalTable
-						write.table(totalTable[sel,],file=con,sep="\t",
-							quote=FALSE,col.names=NA)
-					}
-				}
-			)
-			
-		output$exportRnaDeAllAll <- downloadHandler(
-			filename=function() {
-				tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
-				paste("diffexpr_summary_",tt,".txt", sep='')
-			},
-			content=function(con) {
-				totalTable <- currentRnaDeTable$totalTable
-				write.table(totalTable,file=con,sep="\t",quote=FALSE,
-					col.names=NA)
-			}
-		)
+        output$exportRnaDeAllSelection <- 
+            downloadHandler(
+                filename=function() {
+                    tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+                    paste("diffexpr_summary_",tt,".txt", sep='')
+                },
+                content=function(con) {
+                    sel <- input$rnaDeAnalysisAllTable_rows_selected
+                    if (length(sel)>0) {
+                        totalTable <- currentRnaDeTable$totalTable
+                        write.table(totalTable[sel,],file=con,sep="\t",
+                            quote=FALSE,row.names=FALSE)
+                    }
+                }
+            )
+            
+        output$exportRnaDeAllAll <- downloadHandler(
+            filename=function() {
+                tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+                paste("diffexpr_summary_",tt,".txt", sep='')
+            },
+            content=function(con) {
+                totalTable <- currentRnaDeTable$totalTable
+                write.table(totalTable,file=con,sep="\t",quote=FALSE,
+                    row.names=FALSE)
+            }
+        )
     })
     
     # Now the sliders
+    statSliderUpdate <- reactive({
+        if (input$statThresholdType=="pvalue") {
+            index <- as.integer(input$pvalue)
+            # Dirty hack for the 1st loading...
+            if (index==0) index <- 11
+            currentRnaDeTable$tableFilters$p <- statScoreValues[index]
+        }
+        else if (input$statThresholdType=="fdr") {
+            index <- as.integer(input$fdr)
+            currentRnaDeTable$tableFilters$fdr <- statScoreValues[index]
+        }
+    })
+    
+    foldChangeSliderUpdate <- reactive({
+        if (input$foldThresholdType=="natural") {
+            currentRnaDeTable$tableFilters$scale <- "natural"
+            currentRnaDeTable$tableFilters$fc <- input$fcNatural
+        }
+        else if (input$foldThresholdType=="log2") {
+            currentRnaDeTable$tableFilters$scale <- "log2"
+            currentRnaDeTable$tableFilters$fc <- input$fcLog
+        }
+    })
+    
     
     return(list(
-		rnaDeTotalTable=rnaDeTotalTable,
-		handleRnaDeAnalysisSummarySelection=handleRnaDeAnalysisSummarySelection,
-		handleRnaDeAnalysisAnnotationSelection=
-			handleRnaDeAnalysisAnnotationSelection,
-		handleRnaDeAnalysisFlagsSelection=handleRnaDeAnalysisFlagsSelection,
-		handleRnaDeAnalysisAllSelection=handleRnaDeAnalysisAllSelection,
-		handleRnaDeAnalysisSummaryDownload=handleRnaDeAnalysisSummaryDownload,
-		handleRnaDeAnalysisAnnotationDownload=
-			handleRnaDeAnalysisAnnotationDownload,
-		handleRnaDeAnalysisFlagsDownload=handleRnaDeAnalysisFlagsDownload,
-		handleRnaDeAnalysisAllDownload=handleRnaDeAnalysisAllDownload
+        rnaDeTotalTable=rnaDeTotalTable,
+        handleRnaDeAnalysisSummarySelection=handleRnaDeAnalysisSummarySelection,
+        handleRnaDeAnalysisAnnotationSelection=
+            handleRnaDeAnalysisAnnotationSelection,
+        handleRnaDeAnalysisFlagsSelection=handleRnaDeAnalysisFlagsSelection,
+        handleRnaDeAnalysisAllSelection=handleRnaDeAnalysisAllSelection,
+        handleRnaDeAnalysisSummaryDownload=handleRnaDeAnalysisSummaryDownload,
+        handleRnaDeAnalysisAnnotationDownload=
+            handleRnaDeAnalysisAnnotationDownload,
+        handleRnaDeAnalysisFlagsDownload=handleRnaDeAnalysisFlagsDownload,
+        handleRnaDeAnalysisAllDownload=handleRnaDeAnalysisAllDownload,
+        statSliderUpdate=statSliderUpdate,
+        foldChangeSliderUpdate=foldChangeSliderUpdate
     ))
 }
 
@@ -516,63 +544,63 @@ diffExprTabPanelRenderUI <- function(output,session,allReactiveVars,
                     "first."))
             )
         else {
-			totalTable <- currentRnaDeTable$totalTable
-			res <- totalTable[,c("gene_name","pvalue","fdr")]
-			fcInd <- grep("_vs_",names(totalTable))
-			avgInd <- grep("mean|median",colnames(totalTable),perl=TRUE)
-			devInd <- grep("sd|mad|IQR",colnames(totalTable),perl=TRUE)
-			res <- cbind(res,totalTable[,c(fcInd,avgInd,devInd)])
-			output$rnaDeAnalysisSummaryTable <- 
-				DT::renderDataTable(
-					res,
-					class="display compact",
-					rownames=FALSE,
-					options=list(
-						searchHighlight=TRUE,
-						pageLength=10,
-						lengthMenu=c(10,20,50,100)
-					)
-				)
-			list(
-				div(
-					class="small table-container",
-					DT::dataTableOutput("rnaDeAnalysisSummaryTable"),
-					br(),
-					div(
-						style="display:inline-block; margin:5px;",
-						actionButton(
-							inputId="clearRnaDeSummarySelection",
-							label="Clear selection",
-							class="btn-xs"
-						)
-					),
-					div(
-						style="display:inline-block; margin:5px;",
-						actionButton(
-							inputId="invertRnaDeSummarySelection",
-							label="Invert selection",
-							class="btn-xs"
-						)
-					),
-					div(
-						style="display:inline-block; margin:5px;",
-						downloadButton(
-							outputId="exportRnaDeSummarySelection",
-							label="Export selection",
-							class="btn-xs"
-						)
-					),
-					div(
-						style="display:inline-block; margin:5px;",
-						downloadButton(
-							outputId="exportRnaDeSummaryAll",
-							label="Export all",
-							class="btn-xs"
-						)
-					)
-				)
-			)
-		}
+            totalTable <- currentRnaDeTable$totalTable
+            res <- totalTable[,c("gene_name","pvalue","fdr")]
+            fcInd <- grep("_vs_",names(totalTable))
+            avgInd <- grep("mean|median",colnames(totalTable),perl=TRUE)
+            devInd <- grep("sd|mad|IQR",colnames(totalTable),perl=TRUE)
+            res <- cbind(res,totalTable[,c(fcInd,avgInd,devInd)])
+            output$rnaDeAnalysisSummaryTable <- 
+                DT::renderDataTable(
+                    res,
+                    class="display compact",
+                    rownames=FALSE,
+                    options=list(
+                        searchHighlight=TRUE,
+                        pageLength=10,
+                        lengthMenu=c(10,20,50,100)
+                    )
+                )
+            list(
+                div(
+                    class="small table-container",
+                    DT::dataTableOutput("rnaDeAnalysisSummaryTable"),
+                    br(),
+                    div(
+                        style="display:inline-block; margin:5px;",
+                        actionButton(
+                            inputId="clearRnaDeSummarySelection",
+                            label="Clear selection",
+                            class="btn-xs"
+                        )
+                    ),
+                    div(
+                        style="display:inline-block; margin:5px;",
+                        actionButton(
+                            inputId="invertRnaDeSummarySelection",
+                            label="Invert selection",
+                            class="btn-xs"
+                        )
+                    ),
+                    div(
+                        style="display:inline-block; margin:5px;",
+                        downloadButton(
+                            outputId="exportRnaDeSummarySelection",
+                            label="Export selection",
+                            class="btn-xs"
+                        )
+                    ),
+                    div(
+                        style="display:inline-block; margin:5px;",
+                        downloadButton(
+                            outputId="exportRnaDeSummaryAll",
+                            label="Export all",
+                            class="btn-xs"
+                        )
+                    )
+                )
+            )
+        }
     })
     
     output$rnaDeAnalysisAnnotation <- renderUI({
@@ -583,60 +611,60 @@ diffExprTabPanelRenderUI <- function(output,session,allReactiveVars,
                     "first."))
             )
         else {
-			totalTable <- currentRnaDeTable$totalTable
-			res <- totalTable[,c("chromosome","start","end","gene_id",
-				"strand","gene_name","biotype")]
-			output$rnaDeAnalysisAnnotationTable <- 
-				DT::renderDataTable(
-					res,
-					class="display compact",
-					rownames=FALSE,
-					options=list(
-						searchHighlight=TRUE,
-						pageLength=10,
-						lengthMenu=c(10,20,50,100)
-					)
-				)
-			list(
-				div(
-					class="small table-container",
-					DT::dataTableOutput("rnaDeAnalysisAnnotationTable"),
-					br(),
-					div(
-						style="display:inline-block; margin:5px;",
-						actionButton(
-							inputId="clearRnaDeAnnotationSelection",
-							label="Clear selection",
-							class="btn-xs"
-						)
-					),
-					div(
-						style="display:inline-block; margin:5px;",
-						actionButton(
-							inputId="invertRnaDeAnnotationSelection",
-							label="Invert selection",
-							class="btn-xs"
-						)
-					),
-					div(
-						style="display:inline-block; margin:5px;",
-						downloadButton(
-							outputId="exportRnaDeAnnotationSelection",
-							label="Export selection",
-							class="btn-xs"
-						)
-					),
-					div(
-						style="display:inline-block; margin:5px;",
-						downloadButton(
-							outputId="exportRnaDeAnnotationAll",
-							label="Export all",
-							class="btn-xs"
-						)
-					)
-				)
-			)
-		}
+            totalTable <- currentRnaDeTable$totalTable
+            res <- totalTable[,c("chromosome","start","end","gene_id",
+                "strand","gene_name","biotype")]
+            output$rnaDeAnalysisAnnotationTable <- 
+                DT::renderDataTable(
+                    res,
+                    class="display compact",
+                    rownames=FALSE,
+                    options=list(
+                        searchHighlight=TRUE,
+                        pageLength=10,
+                        lengthMenu=c(10,20,50,100)
+                    )
+                )
+            list(
+                div(
+                    class="small table-container",
+                    DT::dataTableOutput("rnaDeAnalysisAnnotationTable"),
+                    br(),
+                    div(
+                        style="display:inline-block; margin:5px;",
+                        actionButton(
+                            inputId="clearRnaDeAnnotationSelection",
+                            label="Clear selection",
+                            class="btn-xs"
+                        )
+                    ),
+                    div(
+                        style="display:inline-block; margin:5px;",
+                        actionButton(
+                            inputId="invertRnaDeAnnotationSelection",
+                            label="Invert selection",
+                            class="btn-xs"
+                        )
+                    ),
+                    div(
+                        style="display:inline-block; margin:5px;",
+                        downloadButton(
+                            outputId="exportRnaDeAnnotationSelection",
+                            label="Export selection",
+                            class="btn-xs"
+                        )
+                    ),
+                    div(
+                        style="display:inline-block; margin:5px;",
+                        downloadButton(
+                            outputId="exportRnaDeAnnotationAll",
+                            label="Export all",
+                            class="btn-xs"
+                        )
+                    )
+                )
+            )
+        }
     })
     
     output$rnaDeAnalysisFlags <- renderUI({
@@ -647,59 +675,59 @@ diffExprTabPanelRenderUI <- function(output,session,allReactiveVars,
                     "first."))
             )
         else {
-			totalTable <- currentRnaDeTable$totalTable
-			res <- totalTable[,c("LN","MD","MN","QN","KN","BT")]
-			output$rnaDeAnalysisFlagsTable <- 
-				DT::renderDataTable(
-					res,
-					class="display compact",
-					rownames=FALSE,
-					options=list(
-						searchHighlight=TRUE,
-						pageLength=10,
-						lengthMenu=c(10,20,50,100)
-					)
-				)
-			list(
-				div(
-					class="small table-container",
-					DT::dataTableOutput("rnaDeAnalysisFlagsTable"),
-					br(),
-					div(
-						style="display:inline-block; margin:5px;",
-						actionButton(
-							inputId="clearRnaDeFlagsSelection",
-							label="Clear selection",
-							class="btn-xs"
-						)
-					),
-					div(
-						style="display:inline-block; margin:5px;",
-						actionButton(
-							inputId="invertRnaDeFlagsSelection",
-							label="Invert selection",
-							class="btn-xs"
-						)
-					),
-					div(
-						style="display:inline-block; margin:5px;",
-						downloadButton(
-							outputId="exportRnaDeFlagsSelection",
-							label="Export selection",
-							class="btn-xs"
-						)
-					),
-					div(
-						style="display:inline-block; margin:5px;",
-						downloadButton(
-							outputId="exportRnaDeFlagsAll",
-							label="Export all",
-							class="btn-xs"
-						)
-					)
-				)
-			)
-		}
+            totalTable <- currentRnaDeTable$totalTable
+            res <- totalTable[,c("gene_name","LN","MD","MN","QN","KN","BT")]
+            output$rnaDeAnalysisFlagsTable <- 
+                DT::renderDataTable(
+                    res,
+                    class="display compact",
+                    rownames=FALSE,
+                    options=list(
+                        searchHighlight=TRUE,
+                        pageLength=10,
+                        lengthMenu=c(10,20,50,100)
+                    )
+                )
+            list(
+                div(
+                    class="small table-container",
+                    DT::dataTableOutput("rnaDeAnalysisFlagsTable"),
+                    br(),
+                    div(
+                        style="display:inline-block; margin:5px;",
+                        actionButton(
+                            inputId="clearRnaDeFlagsSelection",
+                            label="Clear selection",
+                            class="btn-xs"
+                        )
+                    ),
+                    div(
+                        style="display:inline-block; margin:5px;",
+                        actionButton(
+                            inputId="invertRnaDeFlagsSelection",
+                            label="Invert selection",
+                            class="btn-xs"
+                        )
+                    ),
+                    div(
+                        style="display:inline-block; margin:5px;",
+                        downloadButton(
+                            outputId="exportRnaDeFlagsSelection",
+                            label="Export selection",
+                            class="btn-xs"
+                        )
+                    ),
+                    div(
+                        style="display:inline-block; margin:5px;",
+                        downloadButton(
+                            outputId="exportRnaDeFlagsAll",
+                            label="Export all",
+                            class="btn-xs"
+                        )
+                    )
+                )
+            )
+        }
     })
     
     output$rnaDeAnalysisAll <- renderUI({
@@ -710,81 +738,81 @@ diffExprTabPanelRenderUI <- function(output,session,allReactiveVars,
                     "first."))
             )
         else {
-			totalTable <- currentRnaDeTable$totalTable
-			res <- totalTable[,c("gene_name","pvalue","fdr")]
-			fcInd <- grep("_vs_",names(totalTable))
-			avgInd <- grep("mean|median",colnames(totalTable),perl=TRUE)
-			devInd <- grep("sd|mad|IQR",colnames(totalTable),perl=TRUE)
-			res <- cbind(res,totalTable[,c(fcInd,avgInd,devInd)])
-			output$rnaDeAnalysisAllTable <-
-				DT::renderDataTable(
-					res,
-					class="display compact",
-					rownames=FALSE,
-					options=list(
-						searchHighlight=TRUE,
-						pageLength=10,
-						lengthMenu=c(10,20,50,100)
-					)
-				)
-			list(
-				div(
-					class="small table-container",
-					DT::dataTableOutput("rnaDeAnalysisAllTable"),
-					br(),
-					div(
-						style="display:inline-block; margin:5px;",
-						actionButton(
-							inputId="clearRnaDeAllSelection",
-							label="Clear selection",
-							class="btn-xs"
-						)
-					),
-					div(
-						style="display:inline-block; margin:5px;",
-						actionButton(
-							inputId="invertRnaDeAllSelection",
-							label="Invert selection",
-							class="btn-xs"
-						)
-					),
-					div(
-						style="display:inline-block; margin:5px;",
-						downloadButton(
-							outputId="exportRnaDeAllSelection",
-							label="Export selection",
-							class="btn-xs"
-						)
-					),
-					div(
-						style="display:inline-block; margin:5px;",
-						downloadButton(
-							outputId="exportRnaDeAllAll",
-							label="Export all",
-							class="btn-xs"
-						)
-					)
-				)
-			)
-		}
+            totalTable <- currentRnaDeTable$totalTable
+            res <- totalTable[,c("gene_name","pvalue","fdr")]
+            fcInd <- grep("_vs_",names(totalTable))
+            avgInd <- grep("mean|median",colnames(totalTable),perl=TRUE)
+            devInd <- grep("sd|mad|IQR",colnames(totalTable),perl=TRUE)
+            res <- cbind(res,totalTable[,c(fcInd,avgInd,devInd)])
+            output$rnaDeAnalysisAllTable <-
+                DT::renderDataTable(
+                    res,
+                    class="display compact",
+                    rownames=FALSE,
+                    options=list(
+                        searchHighlight=TRUE,
+                        pageLength=10,
+                        lengthMenu=c(10,20,50,100)
+                    )
+                )
+            list(
+                div(
+                    class="small table-container",
+                    DT::dataTableOutput("rnaDeAnalysisAllTable"),
+                    br(),
+                    div(
+                        style="display:inline-block; margin:5px;",
+                        actionButton(
+                            inputId="clearRnaDeAllSelection",
+                            label="Clear selection",
+                            class="btn-xs"
+                        )
+                    ),
+                    div(
+                        style="display:inline-block; margin:5px;",
+                        actionButton(
+                            inputId="invertRnaDeAllSelection",
+                            label="Invert selection",
+                            class="btn-xs"
+                        )
+                    ),
+                    div(
+                        style="display:inline-block; margin:5px;",
+                        downloadButton(
+                            outputId="exportRnaDeAllSelection",
+                            label="Export selection",
+                            class="btn-xs"
+                        )
+                    ),
+                    div(
+                        style="display:inline-block; margin:5px;",
+                        downloadButton(
+                            outputId="exportRnaDeAllAll",
+                            label="Export all",
+                            class="btn-xs"
+                        )
+                    )
+                )
+            )
+        }
     })
     
     output$rnaDePipelineControl <- renderUI({
-		if (is.null(currentMetadata$final))
-			list(
-				div(style="font-weight:bold","Select control condition"),
-				helpText("Please create a dataset first from the 'Data ",
-					"selector' menu on the top")
-			)
-		else {
-			cls <- unique(as.character(currentMetadata$final$class))
+        if (is.null(currentMetadata$final))
+            list(
+                div(style="font-weight:bold","Select control condition"),
+                helpText("Please create a dataset first from the 'Data ",
+                    "selector' menu on the top")
+            )
+        else {
+            cls <- unique(as.character(currentMetadata$final$class))
             selectInput(
-				inputId="rnaDePipelineControl",
-				label="Select control condition",
-				choices=cls
-			)
-		}
-	})
+                inputId="rnaDePipelineControl",
+                label="Select control condition",
+                choices=cls
+            )
+        }
+    })
     
     output$checkboxBiotypeListRna <- renderUI({
         bts <- getBiotypes(currentMetadata$genome)
@@ -837,28 +865,31 @@ diffExprTabPanelObserve <- function(input,output,session,
             
     rnaDeTotalTable <- diffExprTabPanelReactiveExprs$rnaDeTotalTable
     handleRnaDeAnalysisSummarySelection <- 
-		diffExprTabPanelReactiveExprs$handleRnaDeAnalysisSummarySelection
-	handleRnaDeAnalysisAnnotationSelection <- 
-			diffExprTabPanelReactiveExprs$handleRnaDeAnalysisAnnotationSelection
-	handleRnaDeAnalysisFlagsSelection <-
-		diffExprTabPanelReactiveExprs$handleRnaDeAnalysisFlagsSelection
-	handleRnaDeAnalysisAllSelection <- 
-		diffExprTabPanelReactiveExprs$handleRnaDeAnalysisAllSelection
-	handleRnaDeAnalysisSummaryDownload <- 
-		diffExprTabPanelReactiveExprs$handleRnaDeAnalysisSummaryDownload
-	handleRnaDeAnalysisAnnotationDownload <-
-		diffExprTabPanelReactiveExprs$handleRnaDeAnalysisAnnotationDownload
-	handleRnaDeAnalysisFlagsDownload <- 
-		diffExprTabPanelReactiveExprs$handleRnaDeAnalysisFlagsDownload
-	handleRnaDeAnalysisAllDownload <- 
-		diffExprTabPanelReactiveExprs$handleRnaDeAnalysisAllDownload
+        diffExprTabPanelReactiveExprs$handleRnaDeAnalysisSummarySelection
+    handleRnaDeAnalysisAnnotationSelection <- 
+            diffExprTabPanelReactiveExprs$handleRnaDeAnalysisAnnotationSelection
+    handleRnaDeAnalysisFlagsSelection <-
+        diffExprTabPanelReactiveExprs$handleRnaDeAnalysisFlagsSelection
+    handleRnaDeAnalysisAllSelection <- 
+        diffExprTabPanelReactiveExprs$handleRnaDeAnalysisAllSelection
+    handleRnaDeAnalysisSummaryDownload <- 
+        diffExprTabPanelReactiveExprs$handleRnaDeAnalysisSummaryDownload
+    handleRnaDeAnalysisAnnotationDownload <-
+        diffExprTabPanelReactiveExprs$handleRnaDeAnalysisAnnotationDownload
+    handleRnaDeAnalysisFlagsDownload <- 
+        diffExprTabPanelReactiveExprs$handleRnaDeAnalysisFlagsDownload
+    handleRnaDeAnalysisAllDownload <- 
+        diffExprTabPanelReactiveExprs$handleRnaDeAnalysisAllDownload
+    statSliderUpdate <- diffExprTabPanelReactiveExprs$statSliderUpdate
+    foldChangeSliderUpdate <- 
+        diffExprTabPanelReactiveExprs$foldChangeSliderUpdate
     
     diffExprTabPanelRenderUI(output,session,allReactiveVars,
         allReactiveMsgs)
     
     observe({
-		rnaDeTotalTable()
-	})
+        rnaDeTotalTable()
+    })
     
     observe({
         geneNames <- loadedGenomes[[currentMetadata$genome]]$geneNames
@@ -887,35 +918,37 @@ diffExprTabPanelObserve <- function(input,output,session,
     })
     
     observe({
-		if (isEmpty(currentMetadata$final))
-			shinyjs::disable("performDeAnalysis")
-		else
-			shinyjs::enable("performDeAnalysis")
-	})
+        if (isEmpty(currentMetadata$final))
+            shinyjs::disable("performDeAnalysis")
+        else
+            shinyjs::enable("performDeAnalysis")
+    })
     
     observe({
-		handleRnaDeAnalysisSummarySelection()
-		handleRnaDeAnalysisAnnotationSelection()
-		handleRnaDeAnalysisFlagsSelection()
-		handleRnaDeAnalysisAllSelection()
-		handleRnaDeAnalysisSummaryDownload()
-		handleRnaDeAnalysisAnnotationDownload()
-		handleRnaDeAnalysisFlagsDownload()
-		handleRnaDeAnalysisAllDownload()
-	})
+        handleRnaDeAnalysisSummarySelection()
+        handleRnaDeAnalysisAnnotationSelection()
+        handleRnaDeAnalysisFlagsSelection()
+        handleRnaDeAnalysisAllSelection()
+        handleRnaDeAnalysisSummaryDownload()
+        handleRnaDeAnalysisAnnotationDownload()
+        handleRnaDeAnalysisFlagsDownload()
+        handleRnaDeAnalysisAllDownload()
+        statSliderUpdate()
+        foldChangeSliderUpdate()
+    })
     
     observe({
-		tryCatch({
-			shinyjs::disable("performDeAnalysis")
-			runPipeline()
-		},error=function(e) {
-			shinyjs::enable("performDeAnalysis")
-			print(e)
-		},
-		finally={
-			shinyjs::enable("performDeAnalysis")
-		})
-	})
+        tryCatch({
+            shinyjs::disable("performDeAnalysis")
+            runPipeline()
+        },error=function(e) {
+            shinyjs::enable("performDeAnalysis")
+            print(e)
+        },
+        finally={
+            shinyjs::enable("performDeAnalysis")
+        })
+    })
 }
 
 ################################################################################

@@ -66,3 +66,7 @@ for (s in sources) {
 # Restrict the number of cores dedicated to BigSeqCVis
 #RC <- 0.25
 RC <- NULL
+
+# Hack for p-value, FDR display in sliders
+statScoreValues <- c(0,1e-16,1e-8,1e-4,0.001,0.005,0.01,0.02,0.03,0.04,0.05,0.1,
+    0.2,0.3,0.4,0.5,1)

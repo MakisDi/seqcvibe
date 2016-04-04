@@ -8,6 +8,7 @@ source("client/dataSelectorTab.R")
 source("client/signalViewerTab.R")
 source("client/expressionViewerTab.R")
 source("client/analysisTab.R")
+source("client/genomeBrowserTab.R")
 source("client/helpTab.R")
 
 shinyUI(fluidPage(
@@ -27,70 +28,68 @@ shinyUI(fluidPage(
             src="pace.js"
         ),
         tags$script(HTML(
-			"$(function() {
-				setTimeout(function() {
-				var vals = [0,1e-16,1e-8,1e-4,0.001,0.005,0.01,0.02,0.03,0.04,
-					0.05,0.1,0.2,0.3,0.4,0.5,1];
-				$('#pvalue').data('ionRangeSlider').update({
-					'values': vals,
-					'from': 10
-				});
-				$('#fdr').data('ionRangeSlider').update({
-					'values': vals,
-					'from': 10
-				});
-			},5)})"
+            "$(function() {
+                setTimeout(function() {
+                var vals = [0,1e-16,1e-8,1e-4,0.001,0.005,0.01,0.02,0.03,0.04,
+                    0.05,0.1,0.2,0.3,0.4,0.5,1];
+                $('#pvalue').data('ionRangeSlider').update({
+                    'values': vals,
+                    'from': 10
+                });
+                $('#fdr').data('ionRangeSlider').update({
+                    'values': vals,
+                    'from': 10
+                });
+            },5)})"
         ))
     ),
     navbarPage(
         title="BigSeqCVis (beta)",
         tabPanel("Data selector",
-			dataSelectorTabPanel()
+            dataSelectorTabPanel()
         ),
         navbarMenu("Signal viewer",
-			tabPanel("Gene signal",
-				geneSignalTabPanel()
-			),
-			tabPanel("Area signal",
-				areaSignalTabPanel()
-			)
-		),
+            tabPanel("Gene signal",
+                geneSignalTabPanel()
+            ),
+            tabPanel("Area signal",
+                areaSignalTabPanel()
+            )
+        ),
         navbarMenu("Expression viewer",
             tabPanel("Known genes",
                 expressionExplorerTabPanel()
             ),
             tabPanel("Calculator",
-				expressionCalculatorTabPanel()
+                expressionCalculatorTabPanel()
             )
         ),
         navbarMenu("Analysis",
             tabPanel("Differential expression",
-				differentialExpressionTabPanel()
+                differentialExpressionTabPanel()
             ),
             tabPanel("MDS/PCA analysis",
-				mdsPcaTabPanel()
+                mdsPcaTabPanel()
             ),
             tabPanel("Correlation analysis",
-				correlationTabPanel()
+                correlationTabPanel()
             ),
             tabPanel("Pathway analysis",
-				pathwayTabPanel()
+                pathwayTabPanel()
             ),
             tabPanel("GO analysis",
-				goTabPanel()
+                goTabPanel()
             )
         ),
         tabPanel("Genome browser",
-            fluidRow(column(12,
-                htmlOutput("genomeBrowser")
-            ))
+            genomeBrowserTabPanel()
         ),
         navbarMenu("Help",
             tabPanel("Documentation",
-				docTabPanel()
+                docTabPanel()
             ),
             tabPanel("FAQ",
-				faqTabPanel()
+                faqTabPanel()
             )
         ),
         tabPanel("About",

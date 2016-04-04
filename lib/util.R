@@ -1,4 +1,5 @@
-makeFoldChange <- function(contrast,sample.list,data.matrix,log.offset=1) {
+makeFoldChange <- function(contrast,sample.list,data.matrix,scale="natural",
+    log.offset=1) {
     conds <- strsplit(contrast,"_vs_")[[1]]
     fold.mat <- matrix(0,nrow(data.matrix),length(conds)-1)
     for (i in 1:(length(conds)-1)) { # Last condition is ALWAYS reference
@@ -17,7 +18,10 @@ makeFoldChange <- function(contrast,sample.list,data.matrix,log.offset=1) {
             mean.nom <- mean.nom + log.offset
         if (any(mean.denom==0)) 
             mean.denom <- mean.denom + log.offset
-        fold.mat[,i] <- mean.nom/mean.denom
+        if (scale=="natural")
+            fold.mat[,i] <- mean.nom/mean.denom
+        else if (scale=="log2")
+            fold.mat[,i] <- mean.nom - mean.denom
     }
     rownames(fold.mat) <- rownames(data.matrix)
     colnames(fold.mat) <- paste(conds[1:(length(conds)-1)],"_vs_",
@@ -51,42 +55,78 @@ makeA <- function(contrast,sample.list,data.matrix,log.offset=1) {
     return(a.mat)
 }
 
-makeStat <- function(samples,data.mat,stat) {    
+makeStat <- function(samples,data.mat,stat,value) {    
     stat.data <- data.mat[,match(samples,colnames(data.mat))]
     if (!is.matrix(stat.data)) 
         stat.data <- as.matrix(stat.data)
-    switch(stat,
-        mean = {
-            return(apply(stat.data,1,function(x) {
-                return(as.integer(round(mean(x))))
-            }))
-        },
-        median = {
-            stat.calc <- apply(stat.data,1,function(x) {
-                return(as.integer(round(median(x))))
-            })
-        },
-        sd = {
-            return(apply(stat.data,1,function(x) {
-                return(as.integer(round(sd(x))))
-            }))
-        },
-        mad = {
-            return(apply(stat.data,1,function(x) {
-                return(as.integer(round(mad(x))))
-            }))
-        },
-        cv = {
-            return(apply(stat.data,1,function(x,s) {
-                return(round(sd(x))/round(mean(x)))
-            }))
-        },
-        rcv = {
-            return(apply(stat.data,1,function(x,s) {
-                return(round(mad(x))/round(median(x))) 
-            }))
-        }
-    )
+    if (value=="counts") {
+        switch(stat,
+            mean = {
+                return(apply(stat.data,1,function(x) {
+                    return(as.integer(round(mean(x))))
+                }))
+            },
+            median = {
+                stat.calc <- apply(stat.data,1,function(x) {
+                    return(as.integer(round(median(x))))
+                })
+            },
+            sd = {
+                return(apply(stat.data,1,function(x) {
+                    return(as.integer(round(sd(x))))
+                }))
+            },
+            mad = {
+                return(apply(stat.data,1,function(x) {
+                    return(as.integer(round(mad(x))))
+                }))
+            },
+            cv = {
+                return(apply(stat.data,1,function(x,s) {
+                    return(round(sd(x))/round(mean(x)))
+                }))
+            },
+            rcv = {
+                return(apply(stat.data,1,function(x,s) {
+                    return(round(mad(x))/round(median(x))) 
+                }))
+            }
+        )
+    }
+    else {
+        switch(stat,
+            mean = {
+                return(apply(stat.data,1,function(x) {
+                    return(round(mean(x),6))
+                }))
+            },
+            median = {
+                stat.calc <- apply(stat.data,1,function(x) {
+                    return(round(median(x),6))
+                })
+            },
+            sd = {
+                return(apply(stat.data,1,function(x) {
+                    return(round(sd(x),6))
+                }))
+            },
+            mad = {
+                return(apply(stat.data,1,function(x) {
+                    return(round(mad(x),6))
+                }))
+            },
+            cv = {
+                return(apply(stat.data,1,function(x,s) {
+                    return(round(sd(x)/mean(x),6))
+                }))
+            },
+            rcv = {
+                return(apply(stat.data,1,function(x,s) {
+                    return(round(mad(x)/median(x),6))
+                }))
+            }
+        )
+    }
 }
 
 updateMessages <- function(messageContainer,type,msg,clear=FALSE) {
