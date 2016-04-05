@@ -173,17 +173,19 @@ differentialExpressionTabPanel <- function() {
                             )
                         )),
                         fluidRow(column(12,
-                            radioButtons(
-                                inputId="foldThresholdType",
-                                label="Fold threshold",
-                                inline=TRUE,
-                                choices=c(
-                                    "Natural scale"="natural",
-                                    "log2 scale"="log2"
-                                )
+                            div(
+                                style="font-weight:bold",
+                                "Fold change threshold"
+                            ),
+                            div(
+                                class="small",
+                                helpText(paste("Select the fold change ",
+                                    "display scale (natural or log2) from the ",
+                                    "'Scale' tab above."))
                             ),
                             conditionalPanel(
-                                condition="input.foldThresholdType=='natural'",
+                                condition=
+                                    "input.rnaDeValueScaleRadio=='natural'",
                                 sliderInput(
                                     inputId="fcNatural",
                                     label="Fold change (natural)",
@@ -194,7 +196,7 @@ differentialExpressionTabPanel <- function() {
                                 )
                             ),
                             conditionalPanel(
-                                condition="input.foldThresholdType=='log2'",
+                                condition="input.rnaDeValueScaleRadio=='log2'",
                                 sliderInput(
                                     inputId="fcLog",
                                     label="Fold change (log2)",

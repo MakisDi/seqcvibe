@@ -136,7 +136,7 @@ diffExprTabPanelEventReactive <- function(input,output,session,
                 out.list=TRUE
             ),
         error=function(e) {
-            print(e)
+            #print(e)
         },
         finally="")
         
@@ -187,22 +187,28 @@ diffExprTabPanelReactive <- function(input,output,session,
             # Gradual application of filters for faster rendering
             # 1. Chromosomes
             tmp <- rownames(counts)
-            if (!is.null(filters$chr))
-                tmp <- 
-                    names(which(as.character(ann$chromosome) %in% filters$chr))
+            if (!is.null(filters$chr)) {
+                theChrs <- as.character(ann$chromosome)
+                names(theChrs) <- rownames(rownames(counts))
+                tmp <- names(which(theChrs %in% filters$chr))
+            }
             if (length(tmp)>0)
                 filterInds$chr <- tmp
             # 2. Biotypes
-            if (!is.null(filters$bt))
-                tmp <- names(which(as.character(ann$biotype) %in% filters$bt))
+            if (!is.null(filters$bt)) {
+                theBts <- as.character(ann$biotype)
+                names(theBts) <- rownames(rownames(counts))
+                tmp <- names(which(theBts %in% filters$bt))
+            }
             if (length(tmp)>0)
                 filterInds$bt <- tmp
             
             # 3. Statistical score
             if (input$statThresholdType=="pvalue")
                 tmp <- names(which(p[,1]<filters$p))
-            else if (input$statThresholdType=="fdr")
+            else if (input$statThresholdType=="fdr") {
                 tmp <- names(which(fdr[,1]<filters$fdr))
+            }
             if (length(tmp)>0)
                 filterInds$stat <- tmp
                 
@@ -492,24 +498,50 @@ diffExprTabPanelReactive <- function(input,output,session,
         if (input$statThresholdType=="pvalue") {
             index <- as.integer(input$pvalue)
             # Dirty hack for the 1st loading...
-            if (index==0) index <- 11
-            currentRnaDeTable$tableFilters$p <- statScoreValues[index]
+            if (index==0) index <- 10
+            currentRnaDeTable$tableFilters$p <- statScoreValues[index+1]
         }
         else if (input$statThresholdType=="fdr") {
             index <- as.integer(input$fdr)
-            currentRnaDeTable$tableFilters$fdr <- statScoreValues[index]
+            if (index==0) index <- 10
+            currentRnaDeTable$tableFilters$fdr <- statScoreValues[index+1]
         }
     })
     
     foldChangeSliderUpdate <- reactive({
-        if (input$foldThresholdType=="natural") {
+        if (input$rnaDeValueCompRadio=="natural") {
             currentRnaDeTable$tableFilters$scale <- "natural"
             currentRnaDeTable$tableFilters$fc <- input$fcNatural
         }
-        else if (input$foldThresholdType=="log2") {
+        else if (input$rnaDeValueCompRadio=="log2") {
             currentRnaDeTable$tableFilters$scale <- "log2"
             currentRnaDeTable$tableFilters$fc <- input$fcLog
         }
+    })
+    
+    filterByChromosomeUpdate <- reactive({
+        if (!isEmpty(input$customDeChr)) {
+            if (input$customDeChr=="Show all")
+                currentRnaDeTable$tableFilters$chr <- NULL
+            else
+                currentRnaDeTable$tableFilters$chr <- input$customDeChr
+        }
+    })
+    
+    filterByBiotypeUpdate <- reactive({
+        if (input$rnaDeAnalyzedBiotypeFilter) {
+            bts <- getBiotypes(currentMetadata$genome)
+            names(bts) <- bts
+            wh <- names(which(sapply(bts,function(b) {
+                if (!isEmpty(input[[paste(b,"asFilter",sep="_")]]))
+                    return(input[[paste(b,"asFilter",sep="_")]])
+                else
+                    return(FALSE)
+            })))
+            currentRnaDeTable$tableFilters$bt <- wh
+        }
+        else
+            currentRnaDeTable$tableFilters$bt <- NULL
     })
     
     
@@ -526,7 +558,9 @@ diffExprTabPanelReactive <- function(input,output,session,
         handleRnaDeAnalysisFlagsDownload=handleRnaDeAnalysisFlagsDownload,
         handleRnaDeAnalysisAllDownload=handleRnaDeAnalysisAllDownload,
         statSliderUpdate=statSliderUpdate,
-        foldChangeSliderUpdate=foldChangeSliderUpdate
+        foldChangeSliderUpdate=foldChangeSliderUpdate,
+        filterByChromosomeUpdate=filterByChromosomeUpdate,
+        filterByBiotypeUpdate=filterByBiotypeUpdate
     ))
 }
 
@@ -883,6 +917,10 @@ diffExprTabPanelObserve <- function(input,output,session,
     statSliderUpdate <- diffExprTabPanelReactiveExprs$statSliderUpdate
     foldChangeSliderUpdate <- 
         diffExprTabPanelReactiveExprs$foldChangeSliderUpdate
+    filterByChromosomeUpdate <- 
+        diffExprTabPanelReactiveExprs$filterByChromosomeUpdate
+    filterByBiotypeUpdate <- 
+        diffExprTabPanelReactiveExprs$filterByBiotypeUpdate
     
     diffExprTabPanelRenderUI(output,session,allReactiveVars,
         allReactiveMsgs)
@@ -935,6 +973,8 @@ diffExprTabPanelObserve <- function(input,output,session,
         handleRnaDeAnalysisAllDownload()
         statSliderUpdate()
         foldChangeSliderUpdate()
+        filterByChromosomeUpdate()
+        filterByBiotypeUpdate()
     })
     
     observe({
@@ -943,7 +983,7 @@ diffExprTabPanelObserve <- function(input,output,session,
             runPipeline()
         },error=function(e) {
             shinyjs::enable("performDeAnalysis")
-            print(e)
+            #print(e)
         },
         finally={
             shinyjs::enable("performDeAnalysis")
