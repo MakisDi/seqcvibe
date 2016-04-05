@@ -188,20 +188,16 @@ diffExprTabPanelReactive <- function(input,output,session,
             # 1. Chromosomes
             tmp <- rownames(counts)
             if (!is.null(filters$chr)) {
-                theChrs <- as.character(ann$chromosome)
-                names(theChrs) <- rownames(rownames(counts))
-                tmp <- names(which(theChrs %in% filters$chr))
-            }
-            if (length(tmp)>0)
-                filterInds$chr <- tmp
+					tmp <- which(as.character(ann$chromosome) %in% filters$chr)
+				if (length(tmp)>0)
+					filterInds$chr <- rownames(counts)[tmp]
+			}
             # 2. Biotypes
             if (!is.null(filters$bt)) {
-                theBts <- as.character(ann$biotype)
-                names(theBts) <- rownames(rownames(counts))
-                tmp <- names(which(theBts %in% filters$bt))
-            }
-            if (length(tmp)>0)
-                filterInds$bt <- tmp
+					tmp <- which(as.character(ann$biotype) %in% filters$bt)
+				if (length(tmp)>0)
+					filterInds$bt <- rownames(counts)[tmp]
+			}
             
             # 3. Statistical score
             if (input$statThresholdType=="pvalue")
@@ -251,9 +247,11 @@ diffExprTabPanelReactive <- function(input,output,session,
             
             fcMat <- round(makeFoldChange(contrastList[1],classList,tab,
                 input$rnaDeValueScaleRadio),6)
+                
             tmp <- names(which(apply(fcMat,1,function(x,f) {
                 return(any(x<=f[1] | x>=f[2]))
             },filters$fc)))
+            
             if (length(tmp)>0)
                 filterInds$fold <- tmp
             else
@@ -508,24 +506,29 @@ diffExprTabPanelReactive <- function(input,output,session,
         }
     })
     
-    foldChangeSliderUpdate <- reactive({
-        if (input$rnaDeValueCompRadio=="natural") {
+    valueScaleUpdate <- reactive({
+        if (input$rnaDeValueCompRadio=="natural")
             currentRnaDeTable$tableFilters$scale <- "natural"
-            currentRnaDeTable$tableFilters$fc <- input$fcNatural
-        }
-        else if (input$rnaDeValueCompRadio=="log2") {
+        else if (input$rnaDeValueCompRadio=="log2")
             currentRnaDeTable$tableFilters$scale <- "log2"
-            currentRnaDeTable$tableFilters$fc <- input$fcLog
+    })
+    
+    foldChangeSliderUpdate <- reactive({
+        if (currentRnaDeTable$tableFilters$scale=="natural") {
+            currentRnaDeTable$tableFilters$fc <- input$fcNatural
+            print(input$fcNatural)
         }
+        else if (currentRnaDeTable$tableFilters$scale=="log2") {
+            currentRnaDeTable$tableFilters$fc <- input$fcLog
+            print(input$fcLog)
+		}
     })
     
     filterByChromosomeUpdate <- reactive({
-        if (!isEmpty(input$customDeChr)) {
-            if (input$customDeChr=="Show all")
-                currentRnaDeTable$tableFilters$chr <- NULL
-            else
-                currentRnaDeTable$tableFilters$chr <- input$customDeChr
-        }
+        if (!isEmpty(input$customDeChr))
+			currentRnaDeTable$tableFilters$chr <- input$customDeChr
+        else
+			currentRnaDeTable$tableFilters$chr <- NULL
     })
     
     filterByBiotypeUpdate <- reactive({
@@ -558,6 +561,7 @@ diffExprTabPanelReactive <- function(input,output,session,
         handleRnaDeAnalysisFlagsDownload=handleRnaDeAnalysisFlagsDownload,
         handleRnaDeAnalysisAllDownload=handleRnaDeAnalysisAllDownload,
         statSliderUpdate=statSliderUpdate,
+        valueScaleUpdate=valueScaleUpdate,
         foldChangeSliderUpdate=foldChangeSliderUpdate,
         filterByChromosomeUpdate=filterByChromosomeUpdate,
         filterByBiotypeUpdate=filterByBiotypeUpdate
@@ -862,8 +866,9 @@ diffExprTabPanelRenderUI <- function(output,session,allReactiveVars,
     output$setDeChrs <- renderUI({
         selectizeInput(
             inputId="customDeChr",
-            label="Filter by chromosome", 
-            choices=c("Show all",getValidChromosomes("hg19"))
+            label="Show selected chromosomes",
+            multiple=TRUE,
+            choices=getValidChromosomes("hg19")
         )
     })
     
@@ -915,6 +920,7 @@ diffExprTabPanelObserve <- function(input,output,session,
     handleRnaDeAnalysisAllDownload <- 
         diffExprTabPanelReactiveExprs$handleRnaDeAnalysisAllDownload
     statSliderUpdate <- diffExprTabPanelReactiveExprs$statSliderUpdate
+    valueScaleUpdate <- diffExprTabPanelReactiveExprs$valueScaleUpdate
     foldChangeSliderUpdate <- 
         diffExprTabPanelReactiveExprs$foldChangeSliderUpdate
     filterByChromosomeUpdate <- 
@@ -972,6 +978,7 @@ diffExprTabPanelObserve <- function(input,output,session,
         handleRnaDeAnalysisFlagsDownload()
         handleRnaDeAnalysisAllDownload()
         statSliderUpdate()
+        valueScaleUpdate()
         foldChangeSliderUpdate()
         filterByChromosomeUpdate()
         filterByBiotypeUpdate()

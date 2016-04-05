@@ -217,7 +217,7 @@ differentialExpressionTabPanel <- function() {
                         fluidRow(column(12,
                             selectizeInput(
                                 inputId="rnaDeShowSpecificGenes",
-                                label="Show only selected genes",
+                                label="Show selected genes",
                                 multiple=TRUE,
                                 choices=NULL,
                                 options=list(
@@ -228,7 +228,7 @@ differentialExpressionTabPanel <- function() {
                         )),
                         fluidRow(column(12,
                             div(style=
-                                "font-weight:bold","Filter by gene biotype"),
+                                "font-weight:bold","Show selected biotypes"),
                             checkboxInput(
                                 inputId="rnaDeAnalyzedBiotypeFilter",
                                 label="Biotype expression filtering",
