@@ -205,8 +205,7 @@ diffExprTabPanelReactive <- function(input,output,session,
                             unlist(loadedData[[s]][[d]]$libsize[colnames(tab)])
                         tab <- round(edgeR::rpkm(tab,gene.length=len,
                             lib.size=libsize),digits=6)
-                        for (j in 1:ncol(tab))
-                            tab[,j] <- tab[,j]
+                        print(tab)
                     },
                     rpgm = {
                         len <- loadedData[[s]][[d]]$length[g]
@@ -240,9 +239,6 @@ diffExprTabPanelReactive <- function(input,output,session,
                 colnames(stdMatrix) <- paste(names(classList),
                     input$rnaDeValueDeviationRadio)
                 
-                print(avgMatrix)
-                print(stdMatrix)
-            
                 totalTable <- cbind(
                     ann <- ann[g,,drop=FALSE],
                     sumTable,
@@ -625,6 +621,17 @@ diffExprTabPanelReactive <- function(input,output,session,
             currentRnaDeTable$tableFilters$bt <- NULL
     })
     
+    updateMaPlot <- reactive({
+		theTable <- currentRnaDeTable$totalTable
+		#totalTable <- cbind(
+		#	ann[filterInds$fold,],
+		#	sumTable[filterInds$fold,],
+		#	fcMat,
+		#	as.data.frame(avgMatrix),
+		#	as.data.frame(stdMatrix),
+		#	as.data.frame(flags[filterInds$fold,])
+		#)
+	})
     
     return(list(
         rnaDeTotalTable=rnaDeTotalTable,
@@ -943,12 +950,12 @@ diffExprTabPanelRenderUI <- function(output,session,allReactiveVars,
     })
     
     output$setDeChrs <- renderUI({
-        selectizeInput(
+        disabled(selectizeInput(
             inputId="customDeChr",
             label="Show selected chromosomes",
             multiple=TRUE,
             choices=getValidChromosomes("hg19")
-        )
+        ))
     })
     
     output$checkboxBiotypeListAnalyzedRna <- renderUI({
@@ -970,6 +977,7 @@ diffExprTabPanelRenderUI <- function(output,session,allReactiveVars,
 diffExprTabPanelObserve <- function(input,output,session,
     allReactiveVars,allReactiveMsgs) {
     currentMetadata <- allReactiveVars$currentMetadata
+    currentRnaDeTable <- allReactiveVars$currentRnaDeTable
     
     diffExprTabPanelReactiveEvents <- 
         diffExprTabPanelEventReactive(input,output,session,
@@ -1047,6 +1055,37 @@ diffExprTabPanelObserve <- function(input,output,session,
         else
             shinyjs::enable("performDeAnalysis")
     })
+    
+    observe({
+		if(isEmpty(currentRnaDeTable$totalTable)) {
+			shinyjs::disable("statThresholdType")
+			shinyjs::disable("pvalue")
+			shinyjs::disable("fdr")
+			shinyjs::disable("fcNatural")
+			shinyjs::disable("fcLog")
+			shinyjs::disable("rnaDeShowSpecificGenes")
+			shinyjs::disable("rnaDeAnalyzedBiotypeFilter")
+			shinyjs::disable("rnaDeValueCompRadio")
+			shinyjs::disable("rnaDeValueScaleRadio")
+			shinyjs::disable("rnaDeValueAverageRadio")
+			shinyjs::disable("rnaDeValueDeviationRadio")
+			shinyjs::disable("customDeChr")
+		}
+		else {
+			shinyjs::enable("statThresholdType")
+			shinyjs::enable("pvalue")
+			shinyjs::enable("fdr")
+			shinyjs::enable("fcNatural")
+			shinyjs::enable("fcLog")
+			shinyjs::enable("rnaDeShowSpecificGenes")
+			shinyjs::enable("rnaDeAnalyzedBiotypeFilter")
+			shinyjs::enable("rnaDeValueCompRadio")
+			shinyjs::enable("rnaDeValueScaleRadio")
+			shinyjs::enable("rnaDeValueAverageRadio")
+			shinyjs::enable("rnaDeValueDeviationRadio")
+			shinyjs::enable("customDeChr")
+		}
+	})
     
     observe({
         handleRnaDeAnalysisSummarySelection()

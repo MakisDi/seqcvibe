@@ -56,7 +56,7 @@ makeA <- function(contrast,sample.list,data.matrix,log.offset=1) {
 }
 
 makeStat <- function(samples,data.mat,stat,value) {    
-    stat.data <- data.mat[,match(samples,colnames(data.mat))]
+    stat.data <- data.mat[,match(samples,colnames(data.mat)),drop=FALSE]
     if (!is.matrix(stat.data)) 
         stat.data <- as.matrix(stat.data)
     if (value=="counts") {

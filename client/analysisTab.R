@@ -140,36 +140,36 @@ differentialExpressionTabPanel <- function() {
                         title="Score",
                         fluidRow(br()),
                         fluidRow(column(12,
-                            radioButtons(
+                            disabled(radioButtons(
                                 inputId="statThresholdType",
                                 label="Statistical score threshold",
                                 inline=TRUE,
                                 choices=c(
                                     "p-value"="pvalue",
                                     "FDR"="fdr"
-                                )
+                                ))
                             ),
                             conditionalPanel(
                                 condition="input.statThresholdType=='pvalue'",
-                                sliderInput(
+                                disabled(sliderInput(
                                     inputId="pvalue",
                                     label="p-value",
                                     min=0,
                                     max=1,
                                     value=0.05,
                                     step=0.01
-                                )
+                                ))
                             ),
                             conditionalPanel(
                                 condition="input.statThresholdType=='fdr'",
-                                sliderInput(
+                                disabled(sliderInput(
                                     inputId="fdr",
                                     label="FDR",
                                     min=0,
                                     max=1,
                                     value=0.05,
                                     step=0.01
-                                )
+                                ))
                             )
                         )),
                         fluidRow(column(12,
@@ -186,25 +186,25 @@ differentialExpressionTabPanel <- function() {
                             conditionalPanel(
                                 condition=
                                     "input.rnaDeValueScaleRadio=='natural'",
-                                sliderInput(
+                                disabled(sliderInput(
                                     inputId="fcNatural",
                                     label="Fold change (natural)",
                                     min=0,
                                     max=10,
                                     value=c(0.5,2),
                                     step=0.5
-                                )
+                                ))
                             ),
                             conditionalPanel(
                                 condition="input.rnaDeValueScaleRadio=='log2'",
-                                sliderInput(
+                                disabled(sliderInput(
                                     inputId="fcLog",
                                     label="Fold change (log2)",
                                     min=-5,
                                     max=5,
                                     value=c(-1,1),
                                     step=0.5
-                                )
+                                ))
                             )
                         ))
                     ),
@@ -212,7 +212,7 @@ differentialExpressionTabPanel <- function() {
                         title="Filters",
                         fluidRow(br()),
                         fluidRow(column(12,
-                            selectizeInput(
+                            disabled(selectizeInput(
                                 inputId="rnaDeShowSpecificGenes",
                                 label="Show selected genes",
                                 multiple=TRUE,
@@ -221,7 +221,7 @@ differentialExpressionTabPanel <- function() {
                                     placeholder="Select genes",
                                     selectOnTab=TRUE
                                 )
-                            )
+                            ))
                         )),
                         fluidRow(column(12,
                             htmlOutput("setDeChrs")
@@ -229,11 +229,11 @@ differentialExpressionTabPanel <- function() {
                         fluidRow(column(12,
                             div(style=
                                 "font-weight:bold","Show selected biotypes"),
-                            checkboxInput(
+                            disabled(checkboxInput(
                                 inputId="rnaDeAnalyzedBiotypeFilter",
                                 label="Biotype expression filtering",
                                 value=FALSE
-                            ),
+                            )),
                             conditionalPanel(
                                 condition="input.rnaDeAnalyzedBiotypeFilter",
                                 htmlOutput("checkboxBiotypeListAnalyzedRna")
@@ -244,7 +244,7 @@ differentialExpressionTabPanel <- function() {
                         title="Scale",
                         fluidRow(br()),
                         fluidRow(column(12,
-                            radioButtons(
+                            disabled(radioButtons(
                                 inputId="rnaDeValueCompRadio",
                                 label="Select summary value components",
                                 choices=list(
@@ -252,30 +252,30 @@ differentialExpressionTabPanel <- function() {
                                     "RPKM"="rpkm",
                                     "RPGM"="rpgm"
                                 )
-                            )
+                            ))
                         )),
                         fluidRow(column(12,
-                            radioButtons(
+                            disabled(radioButtons(
                                 inputId="rnaDeValueScaleRadio",
                                 label="Select summary value scale",
                                 choices=list(
                                     "Natural"="natural",
                                     "log2"="log2"
                                 )
-                            )
+                            ))
                         )),
                         fluidRow(column(12,
-                            radioButtons(
+                            disabled(radioButtons(
                                 inputId="rnaDeValueAverageRadio",
                                 label="Select summary value averaging",
                                 choices=list(
                                     "Mean"="mean",
                                     "Median"="median"
                                 )
-                            )
+                            ))
                         )),
                         fluidRow(column(12,
-                            radioButtons(
+                            disabled(radioButtons(
                                 inputId="rnaDeValueDeviationRadio",
                                 label="Select summary value deviation",
                                 choices=list(
@@ -283,7 +283,7 @@ differentialExpressionTabPanel <- function() {
                                     "Median Absolute Deviation"="mad",
                                     "Interquartile Range"="IQR"
                                 )
-                            )
+                            ))
                         ))
                     )
                 )
