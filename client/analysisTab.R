@@ -209,11 +209,8 @@ differentialExpressionTabPanel <- function() {
                         ))
                     ),
                     tabPanel(
-                        title="Filtering",
+                        title="Filters",
                         fluidRow(br()),
-                        fluidRow(column(12,
-                            htmlOutput("setDeChrs")
-                        )),
                         fluidRow(column(12,
                             selectizeInput(
                                 inputId="rnaDeShowSpecificGenes",
@@ -225,6 +222,9 @@ differentialExpressionTabPanel <- function() {
                                     selectOnTab=TRUE
                                 )
                             )
+                        )),
+                        fluidRow(column(12,
+                            htmlOutput("setDeChrs")
                         )),
                         fluidRow(column(12,
                             div(style=

@@ -184,20 +184,91 @@ diffExprTabPanelReactive <- function(input,output,session,
                 bt=rownames(counts)
             )
             
+            # If there are any genes in the gene selectize box, ignore all other
+            # filters
+            if (!is.null(filters$genes)) {
+                g <- filters$genes
+                tab <- counts[g,,drop=FALSE]
+                sumTable <- data.frame(
+                    pvalue=p[g,,drop=FALSE],
+                    fdr=fdr[g,,drop=FALSE]
+                )
+                names(sumTable) <- c("pvalue","fdr")
+                
+                switch(input$rnaDeValueCompRadio,
+                    counts = {
+                        tab <- tab
+                    },
+                    rpkm = {
+                        len <- loadedData[[s]][[d]]$length[g]
+                        libsize <- 
+                            unlist(loadedData[[s]][[d]]$libsize[colnames(tab)])
+                        tab <- round(edgeR::rpkm(tab,gene.length=len,
+                            lib.size=libsize),digits=6)
+                        for (j in 1:ncol(tab))
+                            tab[,j] <- tab[,j]
+                    },
+                    rpgm = {
+                        len <- loadedData[[s]][[d]]$length[g]
+                        for (j in 1:ncol(tab))
+                            tab[,j] <- round(tab[,j]/len,digits=6)
+                    }
+                )
+                switch(input$rnaDeValueScaleRadio,
+                    natural = {
+                        tab <- tab
+                    },
+                    log2 = {
+                        tab <- round(log2(tab+1),digits=6)
+                    }
+                )
+                
+                fcMat <- round(makeFoldChange(contrastList[1],classList,tab,
+                    input$rnaDeValueScaleRadio),6)
+            
+                avgMatrix <- do.call("cbind",lapply(classList,
+                function(x,tab,s,v) {
+                    makeStat(x,tab,s,v)
+                },tab,input$rnaDeValueAverageRadio,input$rnaDeValueCompRadio))
+                colnames(avgMatrix) <- paste(names(classList),
+                    input$rnaDeValueAverageRadio)
+                
+                stdMatrix <- do.call("cbind",lapply(classList,
+                function(x,tab,s,v) {
+                    makeStat(x,tab,s,v)
+                },tab,input$rnaDeValueDeviationRadio,input$rnaDeValueCompRadio))
+                colnames(stdMatrix) <- paste(names(classList),
+                    input$rnaDeValueDeviationRadio)
+                
+                print(avgMatrix)
+                print(stdMatrix)
+            
+                totalTable <- cbind(
+                    ann <- ann[g,,drop=FALSE],
+                    sumTable,
+                    fcMat,
+                    as.data.frame(avgMatrix),
+                    as.data.frame(stdMatrix),
+                    as.data.frame(flags[g,,drop=FALSE])
+                )               
+                currentRnaDeTable$totalTable <- totalTable
+                return()
+            }
+            
             # Gradual application of filters for faster rendering
             # 1. Chromosomes
             tmp <- rownames(counts)
             if (!is.null(filters$chr)) {
-					tmp <- which(as.character(ann$chromosome) %in% filters$chr)
-				if (length(tmp)>0)
-					filterInds$chr <- rownames(counts)[tmp]
-			}
+                    tmp <- which(as.character(ann$chromosome) %in% filters$chr)
+                if (length(tmp)>0)
+                    filterInds$chr <- rownames(counts)[tmp]
+            }
             # 2. Biotypes
             if (!is.null(filters$bt)) {
-					tmp <- which(as.character(ann$biotype) %in% filters$bt)
-				if (length(tmp)>0)
-					filterInds$bt <- rownames(counts)[tmp]
-			}
+                    tmp <- which(as.character(ann$biotype) %in% filters$bt)
+                if (length(tmp)>0)
+                    filterInds$bt <- rownames(counts)[tmp]
+            }
             
             # 3. Statistical score
             if (input$statThresholdType=="pvalue")
@@ -507,28 +578,35 @@ diffExprTabPanelReactive <- function(input,output,session,
     })
     
     valueScaleUpdate <- reactive({
-        if (input$rnaDeValueCompRadio=="natural")
+        if (input$rnaDeValueScaleRadio=="natural")
             currentRnaDeTable$tableFilters$scale <- "natural"
-        else if (input$rnaDeValueCompRadio=="log2")
+        else if (input$rnaDeValueScaleRadio=="log2")
             currentRnaDeTable$tableFilters$scale <- "log2"
     })
     
     foldChangeSliderUpdate <- reactive({
         if (currentRnaDeTable$tableFilters$scale=="natural") {
-            currentRnaDeTable$tableFilters$fc <- input$fcNatural
-            print(input$fcNatural)
+            index <- as.integer(input$fcNatural)
+            # Dirty hack for the 1st loading...
+            if (any(index==0)) index <- c(10,20)
+            currentRnaDeTable$tableFilters$fc <- fcNatValues[index+1]
         }
-        else if (currentRnaDeTable$tableFilters$scale=="log2") {
+        else if (currentRnaDeTable$tableFilters$scale=="log2")
             currentRnaDeTable$tableFilters$fc <- input$fcLog
-            print(input$fcLog)
-		}
+    })
+    
+    filterByGeneUpdate <- reactive({
+        if (!isEmpty(input$rnaDeShowSpecificGenes))
+            currentRnaDeTable$tableFilters$genes <- input$rnaDeShowSpecificGenes
+        else
+            currentRnaDeTable$tableFilters$genes <- NULL
     })
     
     filterByChromosomeUpdate <- reactive({
         if (!isEmpty(input$customDeChr))
-			currentRnaDeTable$tableFilters$chr <- input$customDeChr
+            currentRnaDeTable$tableFilters$chr <- input$customDeChr
         else
-			currentRnaDeTable$tableFilters$chr <- NULL
+            currentRnaDeTable$tableFilters$chr <- NULL
     })
     
     filterByBiotypeUpdate <- reactive({
@@ -563,6 +641,7 @@ diffExprTabPanelReactive <- function(input,output,session,
         statSliderUpdate=statSliderUpdate,
         valueScaleUpdate=valueScaleUpdate,
         foldChangeSliderUpdate=foldChangeSliderUpdate,
+        filterByGeneUpdate=filterByGeneUpdate,
         filterByChromosomeUpdate=filterByChromosomeUpdate,
         filterByBiotypeUpdate=filterByBiotypeUpdate
     ))
@@ -923,6 +1002,7 @@ diffExprTabPanelObserve <- function(input,output,session,
     valueScaleUpdate <- diffExprTabPanelReactiveExprs$valueScaleUpdate
     foldChangeSliderUpdate <- 
         diffExprTabPanelReactiveExprs$foldChangeSliderUpdate
+    filterByGeneUpdate <- diffExprTabPanelReactiveExprs$filterByGeneUpdate
     filterByChromosomeUpdate <- 
         diffExprTabPanelReactiveExprs$filterByChromosomeUpdate
     filterByBiotypeUpdate <- 
@@ -980,6 +1060,7 @@ diffExprTabPanelObserve <- function(input,output,session,
         statSliderUpdate()
         valueScaleUpdate()
         foldChangeSliderUpdate()
+        filterByGeneUpdate()
         filterByChromosomeUpdate()
         filterByBiotypeUpdate()
     })
