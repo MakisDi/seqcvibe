@@ -104,6 +104,23 @@ diffExprTabPanelEventReactive <- function(input,output,session,
             biotype=btFilt
         )
         
+        progress <- shiny::Progress$new()
+        progress$initialize(
+            session,
+            min=0,
+            max=6
+        )
+        progress$set(message="",value=0)
+        on.exit(progress$close())
+        
+        updateProgress <- function(value=NULL,detail=NULL) {
+            if (is.null(value)) {
+                value <- progress$getValue()
+                value <- value + 1
+            }
+            progress$set(value=value,detail=detail)
+        }
+        
         pipOutput <- tryCatch(
             metaseqr(
                 counts=D,
@@ -133,7 +150,8 @@ diffExprTabPanelEventReactive <- function(input,output,session,
                 export.stats="mean",
                 save.gene.model=FALSE,
                 report=FALSE,
-                out.list=TRUE
+                out.list=TRUE,
+                progress.fun=updateProgress
             ),
         error=function(e) {
             #print(e)
@@ -159,6 +177,7 @@ diffExprTabPanelReactive <- function(input,output,session,
     currentMetadata <- allReactiveVars$currentMetadata
     currentPipelineOutput <- allReactiveVars$currentPipelineOutput
     currentRnaDeTable <- allReactiveVars$currentRnaDeTable
+    maPlots <- allReactiveVars$maPlots
     
     rnaDeTotalTable <- reactive({
         s <- unique(as.character(currentMetadata$source))
@@ -622,16 +641,88 @@ diffExprTabPanelReactive <- function(input,output,session,
     })
     
     updateMaPlot <- reactive({
-		theTable <- currentRnaDeTable$totalTable
-		#totalTable <- cbind(
-		#	ann[filterInds$fold,],
-		#	sumTable[filterInds$fold,],
-		#	fcMat,
-		#	as.data.frame(avgMatrix),
-		#	as.data.frame(stdMatrix),
-		#	as.data.frame(flags[filterInds$fold,])
-		#)
-	})
+        if (isEmpty(currentPipelineOutput$counts))
+            return()
+        
+        classList <- currentPipelineOutput$classList
+        contrastList <- currentPipelineOutput$contrastList
+        p <- currentPipelineOutput$pValue[[contrastList[1]]][,1,drop=FALSE]
+        fdr <- currentPipelineOutput$fdr[[contrastList[1]]][,1,drop=FALSE]
+        expr <- which(!is.na(p))
+        ann <- currentPipelineOutput$annotation[expr,]
+        tab <- currentPipelineOutput$counts[expr,]
+        p <- p[expr,,drop=FALSE]
+        fdr <- fdr[expr,,drop=FALSE]
+        
+        
+        fct <- currentRnaDeTable$tableFilters$fc
+        pcut <- currentRnaDeTable$tableFilters$p
+        fdrcut <- currentRnaDeTable$tableFilters$fdr
+        
+        if (input$rnaDeValueScaleRadio=="natural")
+            fct <- log2(fct)
+        if (input$statThresholdType=="pvalue") {
+            sc <- pcut
+            SC <- p
+        }
+        else {
+            sc <- fdrcut
+            SC <- fdr
+        }
+        
+        fcMat <- round(log2(makeFoldChange(contrastList[1],classList,tab)),3)
+        aMat <- round(makeA(contrastList[1],classList,tab),3)
+        
+        up <- which(fcMat[,1]>=fct[2] & SC<sc)
+        down <- which(fcMat[,1]<=fct[1] & SC<sc)
+        #neutral <- setdiff(1:nrow(theTable),c(up,down))
+        status <- rep("Neutral",nrow(tab))
+        status[up] <- "Up"
+        status[down] <- "Down"
+        #status[up] <- paste("Up (",length(up)," genes)",sep="")
+        #status[down] <- paste("Down (",length(down)," genes)",sep="")
+        #status[neutral] <- paste("Neutral (",length(neutral)," genes)",sep="")
+        
+        #cat.ind <- list()
+        #cat.ind$up <- which(fcMat[,1]>=fct[2] & SC<sc)
+        #cat.ind$down <- which(fcMat[,1]<=fct[1] & SC<sc)
+        #cat.ind$neutral <- setdiff(1:nrow(tab),c(cat.ind$up,cat.ind$down))
+        #names(cat.ind) <- c(
+        #    paste("Up (",length(cat.ind$up)," genes)",sep=""),
+        #    paste("Down (",length(cat.ind$down)," genes)",sep=""),
+        #    paste("Neutral (",length(cat.ind$neutral)," genes)",sep="")
+        #)
+        #status[cat.ind[[1]]] <- names(cat.ind)[1]
+        #status[cat.ind[[2]]] <- names(cat.ind)[2]
+        #status[cat.ind[[3]]] <- names(cat.ind)[3]
+        color.list <- c("red3","green3","gray40")
+        #names(color.list) <- names(cat.ind)
+        names(color.list) <- c("Up","Down","Neutral")
+
+        maplot.data <- data.frame(
+            A=aMat[,1],
+            M=fcMat[,1],
+            Status=status,
+            Gene=as.character(ann$gene_name)
+        )
+        maPlots$maPlot <- ggplot() + 
+            geom_point(data=maplot.data[-c(up,down),,drop=FALSE],
+                aes(x=A,y=M,colour=Status,size=Size,text=Gene),size=0.5) +
+            geom_point(data=maplot.data[c(up,down),,drop=FALSE],
+                aes(x=A,y=M,colour=Status,size=Size,text=Gene),size=1) +
+            theme_bw() +
+            xlab("Average expression") +
+            ylab("Fold change (log2)") +
+            theme(
+                axis.title.x=element_text(size=10),
+                axis.title.y=element_text(size=10),
+                axis.text.x=element_text(size=9,face="bold"),
+                axis.text.y=element_text(size=9,face="bold"),
+                legend.position="bottom"
+            ) +
+            scale_color_manual(values=color.list) +
+            scale_fill_manual(values=color.list)
+    })
     
     return(list(
         rnaDeTotalTable=rnaDeTotalTable,
@@ -650,7 +741,8 @@ diffExprTabPanelReactive <- function(input,output,session,
         foldChangeSliderUpdate=foldChangeSliderUpdate,
         filterByGeneUpdate=filterByGeneUpdate,
         filterByChromosomeUpdate=filterByChromosomeUpdate,
-        filterByBiotypeUpdate=filterByBiotypeUpdate
+        filterByBiotypeUpdate=filterByBiotypeUpdate,
+        updateMaPlot=updateMaPlot
     ))
 }
 
@@ -969,8 +1061,12 @@ diffExprTabPanelRenderUI <- function(output,session,allReactiveVars,
         })
     })
     
-    output$rnaDeMAPlot <- renderPlot({
-        maPlots$maPlot
+    #output$rnaDeMAPlot <- renderPlot({
+    #    maPlots$maPlot
+    #})
+    
+    output$rnaDeMAPlot <- renderPlotly({
+        ggplotly(maPlots$maPlot,tooltip=c("y","x","text"))
     })
 }
 
@@ -1015,6 +1111,7 @@ diffExprTabPanelObserve <- function(input,output,session,
         diffExprTabPanelReactiveExprs$filterByChromosomeUpdate
     filterByBiotypeUpdate <- 
         diffExprTabPanelReactiveExprs$filterByBiotypeUpdate
+    updateMaPlot <- diffExprTabPanelReactiveExprs$updateMaPlot
     
     diffExprTabPanelRenderUI(output,session,allReactiveVars,
         allReactiveMsgs)
@@ -1057,35 +1154,61 @@ diffExprTabPanelObserve <- function(input,output,session,
     })
     
     observe({
-		if(isEmpty(currentRnaDeTable$totalTable)) {
-			shinyjs::disable("statThresholdType")
-			shinyjs::disable("pvalue")
-			shinyjs::disable("fdr")
-			shinyjs::disable("fcNatural")
-			shinyjs::disable("fcLog")
-			shinyjs::disable("rnaDeShowSpecificGenes")
-			shinyjs::disable("rnaDeAnalyzedBiotypeFilter")
-			shinyjs::disable("rnaDeValueCompRadio")
-			shinyjs::disable("rnaDeValueScaleRadio")
-			shinyjs::disable("rnaDeValueAverageRadio")
-			shinyjs::disable("rnaDeValueDeviationRadio")
-			shinyjs::disable("customDeChr")
-		}
-		else {
-			shinyjs::enable("statThresholdType")
-			shinyjs::enable("pvalue")
-			shinyjs::enable("fdr")
-			shinyjs::enable("fcNatural")
-			shinyjs::enable("fcLog")
-			shinyjs::enable("rnaDeShowSpecificGenes")
-			shinyjs::enable("rnaDeAnalyzedBiotypeFilter")
-			shinyjs::enable("rnaDeValueCompRadio")
-			shinyjs::enable("rnaDeValueScaleRadio")
-			shinyjs::enable("rnaDeValueAverageRadio")
-			shinyjs::enable("rnaDeValueDeviationRadio")
-			shinyjs::enable("customDeChr")
-		}
-	})
+        if (input$rnaDeGeneFilter=="quantile") {
+            qq <- as.numeric(input$rnaDeQuantileFilter)
+            if (is.na(qq) || qq<0 || qq>1) {
+                output$rnaDeSettingsError <- renderUI({
+                    div(class="error-message",paste("The quantile ",
+                        "must be a number between 0 and 1!",sep=""))
+                })
+                shinyjs::disable("performDeAnalysis")
+            }
+            else {
+                output$rnaDeSettingsError <- renderUI({div()})
+                if (isEmpty(currentMetadata$final))
+                    shinyjs::disable("performDeAnalysis")
+                else
+                    shinyjs::enable("performDeAnalysis")
+            }
+        }
+        else {
+            if (isEmpty(currentMetadata$final))
+                shinyjs::disable("performDeAnalysis")
+            else
+                shinyjs::enable("performDeAnalysis")
+        }           
+    })
+    
+    observe({
+        if(isEmpty(currentRnaDeTable$totalTable)) {
+            shinyjs::disable("statThresholdType")
+            shinyjs::disable("pvalue")
+            shinyjs::disable("fdr")
+            shinyjs::disable("fcNatural")
+            shinyjs::disable("fcLog")
+            shinyjs::disable("rnaDeShowSpecificGenes")
+            shinyjs::disable("rnaDeAnalyzedBiotypeFilter")
+            shinyjs::disable("rnaDeValueCompRadio")
+            shinyjs::disable("rnaDeValueScaleRadio")
+            shinyjs::disable("rnaDeValueAverageRadio")
+            shinyjs::disable("rnaDeValueDeviationRadio")
+            shinyjs::disable("customDeChr")
+        }
+        else {
+            shinyjs::enable("statThresholdType")
+            shinyjs::enable("pvalue")
+            shinyjs::enable("fdr")
+            shinyjs::enable("fcNatural")
+            shinyjs::enable("fcLog")
+            shinyjs::enable("rnaDeShowSpecificGenes")
+            shinyjs::enable("rnaDeAnalyzedBiotypeFilter")
+            shinyjs::enable("rnaDeValueCompRadio")
+            shinyjs::enable("rnaDeValueScaleRadio")
+            shinyjs::enable("rnaDeValueAverageRadio")
+            shinyjs::enable("rnaDeValueDeviationRadio")
+            shinyjs::enable("customDeChr")
+        }
+    })
     
     observe({
         handleRnaDeAnalysisSummarySelection()
@@ -1102,6 +1225,7 @@ diffExprTabPanelObserve <- function(input,output,session,
         filterByGeneUpdate()
         filterByChromosomeUpdate()
         filterByBiotypeUpdate()
+        updateMaPlot()
     })
     
     observe({
@@ -1109,11 +1233,13 @@ diffExprTabPanelObserve <- function(input,output,session,
             shinyjs::disable("performDeAnalysis")
             runPipeline()
         },error=function(e) {
-            shinyjs::enable("performDeAnalysis")
             #print(e)
         },
         finally={
-            shinyjs::enable("performDeAnalysis")
+            if (isEmpty(currentMetadata$final))
+                shinyjs::disable("performDeAnalysis")
+            else
+                shinyjs::enable("performDeAnalysis")
         })
     })
 }

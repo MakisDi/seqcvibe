@@ -142,16 +142,16 @@ initReactiveVars <- function() {
     )
     
     currentRnaDeTable <- reactiveValues(
-		totalTable=NULL,
-		tableFilters=list(
-			p=0.05,
-			fdr=0.05,
-			scale="natural",
-			fc=c(0.5,2),
-			bt=NULL,
-			genes=NULL,
-			chr=NULL
-		)
+        totalTable=NULL,
+        tableFilters=list(
+            p=0.05,
+            fdr=0.05,
+            scale="natural",
+            fc=c(0.5,2),
+            bt=NULL,
+            genes=NULL,
+            chr=NULL
+        )
     )
     
     currentMdsTables <- reactiveValues()

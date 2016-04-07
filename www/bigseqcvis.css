@@ -114,5 +114,19 @@
     float: right;
 }
 
+/*#maplot-container {
+  position: relative;
+}
 
+#loading-pacman {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: -1;
+  margin-top: -100px;
+  margin-left: -100px;
+}
 
+#rnaDeMAPlot.recalculating {
+    z-index: -2;
+}*/

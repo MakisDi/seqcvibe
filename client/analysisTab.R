@@ -291,7 +291,18 @@ differentialExpressionTabPanel <- function() {
         ))
     ),column(9,
         fluidRow(column(12,
-            plotOutput("rnaDeMAPlot",height="640px")
+            #div(
+            #    id="maplot-container",
+            #    tags$img(
+            #        id="loading-spinner",
+            #        src="pacman.gif",
+            #    )
+            #)
+            div(
+                id="maplotly-container",
+                plotlyOutput("rnaDeMAPlot",height="640px")
+            )
+            #plotOutput("rnaDeMAPlot",height="640px")
         )),
         wellPanel(
             tabsetPanel(

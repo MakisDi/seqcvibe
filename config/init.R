@@ -7,6 +7,7 @@ require(GenomicRanges)
 require(GenomicAlignments)
 require(rtracklayer)
 require(ggbio)
+require(plotly)
 
 # Load additional functions
 source("lib/control.R")
