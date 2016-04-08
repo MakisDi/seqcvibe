@@ -298,10 +298,7 @@ differentialExpressionTabPanel <- function() {
             #        src="pacman.gif",
             #    )
             #)
-            div(
-                id="maplotly-container",
-                plotlyOutput("rnaDeMAPlot",height="640px")
-            )
+            plotlyOutput("rnaDeMAPlot",height="640px")
             #plotOutput("rnaDeMAPlot",height="640px")
         )),
         wellPanel(

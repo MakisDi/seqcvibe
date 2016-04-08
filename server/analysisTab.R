@@ -695,33 +695,37 @@ diffExprTabPanelReactive <- function(input,output,session,
         #status[cat.ind[[1]]] <- names(cat.ind)[1]
         #status[cat.ind[[2]]] <- names(cat.ind)[2]
         #status[cat.ind[[3]]] <- names(cat.ind)[3]
+        size <- status
         color.list <- c("red3","green3","gray40")
+        size.list <- c(1,1,0.5)
         #names(color.list) <- names(cat.ind)
-        names(color.list) <- c("Up","Down","Neutral")
+        names(color.list) <- names(size.list) <- c("Up","Down","Neutral")
 
         maplot.data <- data.frame(
             A=aMat[,1],
             M=fcMat[,1],
             Status=status,
+            Size=size,
             Gene=as.character(ann$gene_name)
         )
-        maPlots$maPlot <- ggplot() + 
-            geom_point(data=maplot.data[-c(up,down),,drop=FALSE],
-                aes(x=A,y=M,colour=Status,size=Size,text=Gene),size=0.5) +
-            geom_point(data=maplot.data[c(up,down),,drop=FALSE],
-                aes(x=A,y=M,colour=Status,size=Size,text=Gene),size=1) +
-            theme_bw() +
-            xlab("Average expression") +
-            ylab("Fold change (log2)") +
-            theme(
-                axis.title.x=element_text(size=10),
-                axis.title.y=element_text(size=10),
-                axis.text.x=element_text(size=9,face="bold"),
-                axis.text.y=element_text(size=9,face="bold"),
-                legend.position="bottom"
-            ) +
-            scale_color_manual(values=color.list) +
-            scale_fill_manual(values=color.list)
+        maPlots$maPlot <- maplot.data
+        #maPlots$maPlot <- ggplot() + 
+        #    geom_point(data=maplot.data,aes(x=A,y=M,colour=Status,size=Size,
+        #        text=Gene)) +
+        #    theme_bw() +
+        #    xlab("Average expression") +
+        #    ylab("Fold change (log2)") +
+        #    theme(
+        #        axis.title.x=element_text(size=10),
+        #        axis.title.y=element_text(size=10),
+        #        axis.text.x=element_text(size=9,face="bold"),
+        #        axis.text.y=element_text(size=9,face="bold"),
+        #        legend.position="bottom"
+        #    ) +
+        #    scale_color_manual(values=color.list) +
+        #    scale_fill_manual(values=color.list) + 
+        #    scale_size_manual(values=size.list) + 
+        #    guides(size=FALSE)
     })
     
     return(list(
@@ -1066,7 +1070,58 @@ diffExprTabPanelRenderUI <- function(output,session,allReactiveVars,
     #})
     
     output$rnaDeMAPlot <- renderPlotly({
-        ggplotly(maPlots$maPlot,tooltip=c("y","x","text"))
+        if (nrow(maPlots$maPlot)==1) {
+            ax <- list(
+              title="",
+              zeroline=FALSE,
+              showline=FALSE,
+              showticklabels=FALSE,
+              showgrid=FALSE
+            )
+            te <- list(
+                size=42,
+                color=toRGB("grey40")
+            )
+            plot_ly(
+                data=maPlots$maPlot,
+                x=A,
+                y=M,
+                text=Gene,
+                mode="text",
+                textfont=te
+            ) %>%
+            layout(xaxis=ax,yaxis=ax)
+        }
+        else {
+            cols <- c("green3","grey20","red3")
+            #size.list <- c(1,1,0.5)
+            dat <- maPlots$maPlot
+            dat <- dat[order(dat$Status),]
+            p <- plot_ly(
+                data=dat,
+                x=A,
+                y=M,
+                type="scatter",
+                mode="markers",
+                text=Gene,
+                color=Status,
+                colors=cols
+                #size=size.list
+            )
+            p <- layout(p,
+                xaxis=list(
+                    title="Average expression"
+                ),
+                yaxis=list(
+                    title="Fold change (log2)"
+                ),
+                legend=list(
+                    x=1,
+                    y=1
+                )
+            )
+            p
+        }
     })
 }
 
