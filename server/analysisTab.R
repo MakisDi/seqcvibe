@@ -12,6 +12,30 @@ diffExprTabPanelEventReactive <- function(input,output,session,
         meta <- currentMetadata$final
         samples <- as.character(meta$sample_id)
         dbGene <- loadedGenomes[[currentMetadata$genome]]$dbGene
+        
+        # Check if we have counts from custom regions
+        addAnn <- NULL
+        if (input$includeCustomRegions) {
+			if (!is.null(customRnaRegions$name)) {
+				addAnn <- data.frame(
+					chromosome=as.character(customRnaRegions$chromosome),
+					start=as.integer(customRnaRegions$start),
+					end=as.integer(customRnaRegions$end),
+					gene_id=as.character(customRnaRegions$name),
+					gc_content=rep(0,length(customRnaRegions$name)),
+					strand=as.character(customRnaRegions$strand),
+					gene_name=as.character(customRnaRegions$name),
+					biotype=rep("unknown",length(customRnaRegions$name))
+				)
+				rownames(addAnn) <- addAnn$gene_id
+			}
+			if (!is.null(currentCustomRnaTables$lengths)) {
+				addAnn <- cbind(addAnn,currentCustomRnaTables$lengths)
+				names(addAnn)[ncol(addAnn)] <- "active_length"
+			}
+		}
+        
+        # Construct annotation
         ann <- data.frame(
             chromosome=as.character(seqnames(dbGene)),
             start=start(dbGene),
@@ -24,7 +48,24 @@ diffExprTabPanelEventReactive <- function(input,output,session,
         )
         rownames(ann) <- ann$gene_id
         
+        # Counts
         M <- loadedData[[s]][[d]]$counts[rownames(ann),samples]
+        len <- loadedData[[s]][[d]]$length[rownames(ann)]
+        ann <- cbind(ann,len)
+        names(ann)[ncol(ann)] <- "active_length"
+        
+        # Final annotation
+        ann <- rbind(ann,addAnn)
+        
+        # Custom counts
+        A <- NULL
+        if (!is.null(currentCustomRnaTables$lengths)) {
+			A <- do.call("cbind",currentCustomRnaTables$tables)
+			A <- A[,colnames(M)]
+		}
+		M <- rbind(M,A)
+		
+		# Final feed to metaseqr
         D <- cbind(ann,M)
         
         # Set up sample and contrast list for metaseqr
@@ -673,59 +714,74 @@ diffExprTabPanelReactive <- function(input,output,session,
         fcMat <- round(log2(makeFoldChange(contrastList[1],classList,tab)),3)
         aMat <- round(makeA(contrastList[1],classList,tab),3)
         
-        up <- which(fcMat[,1]>=fct[2] & SC<sc)
-        down <- which(fcMat[,1]<=fct[1] & SC<sc)
-        #neutral <- setdiff(1:nrow(theTable),c(up,down))
-        status <- rep("Neutral",nrow(tab))
-        status[up] <- "Up"
-        status[down] <- "Down"
-        #status[up] <- paste("Up (",length(up)," genes)",sep="")
-        #status[down] <- paste("Down (",length(down)," genes)",sep="")
-        #status[neutral] <- paste("Neutral (",length(neutral)," genes)",sep="")
+        #up <- which(fcMat[,1]>=fct[2] & SC<sc)
+        #down <- which(fcMat[,1]<=fct[1] & SC<sc)
+        #status <- rep("Neutral",nrow(tab))
+        #status[up] <- "Up"
+        #status[down] <- "Down"
         
-        #cat.ind <- list()
-        #cat.ind$up <- which(fcMat[,1]>=fct[2] & SC<sc)
-        #cat.ind$down <- which(fcMat[,1]<=fct[1] & SC<sc)
-        #cat.ind$neutral <- setdiff(1:nrow(tab),c(cat.ind$up,cat.ind$down))
-        #names(cat.ind) <- c(
-        #    paste("Up (",length(cat.ind$up)," genes)",sep=""),
-        #    paste("Down (",length(cat.ind$down)," genes)",sep=""),
-        #    paste("Neutral (",length(cat.ind$neutral)," genes)",sep="")
-        #)
-        #status[cat.ind[[1]]] <- names(cat.ind)[1]
-        #status[cat.ind[[2]]] <- names(cat.ind)[2]
-        #status[cat.ind[[3]]] <- names(cat.ind)[3]
-        size <- status
-        color.list <- c("red3","green3","gray40")
+        status <- rep(NA,nrow(tab))
+        cat.ind <- list()
+        cat.ind$up <- which(fcMat[,1]>=fct[2] & SC<sc)
+        cat.ind$down <- which(fcMat[,1]<=fct[1] & SC<sc)
+        cat.ind$neutral <- setdiff(1:nrow(tab),c(cat.ind$up,cat.ind$down))
+        names(cat.ind) <- c(
+            paste("Up (",length(cat.ind$up)," genes)",sep=""),
+            paste("Down (",length(cat.ind$down)," genes)",sep=""),
+            paste("Neutral (",length(cat.ind$neutral)," genes)",sep="")
+        )
+        status[cat.ind[[1]]] <- names(cat.ind)[1]
+        status[cat.ind[[2]]] <- names(cat.ind)[2]
+        status[cat.ind[[3]]] <- names(cat.ind)[3]
+        color.list <- unlist(maPlots$maColours)
         size.list <- c(1,1,0.5)
-        #names(color.list) <- names(cat.ind)
-        names(color.list) <- names(size.list) <- c("Up","Down","Neutral")
+        names(color.list) <- names(size.list) <- names(cat.ind)
+        #names(color.list) <- names(size.list) <- c("Up","Down","Neutral")
 
         maplot.data <- data.frame(
             A=aMat[,1],
             M=fcMat[,1],
             Status=status,
-            Size=size,
             Gene=as.character(ann$gene_name)
         )
-        maPlots$maPlot <- maplot.data
-        #maPlots$maPlot <- ggplot() + 
-        #    geom_point(data=maplot.data,aes(x=A,y=M,colour=Status,size=Size,
-        #        text=Gene)) +
-        #    theme_bw() +
-        #    xlab("Average expression") +
-        #    ylab("Fold change (log2)") +
-        #    theme(
-        #        axis.title.x=element_text(size=10),
-        #        axis.title.y=element_text(size=10),
-        #        axis.text.x=element_text(size=9,face="bold"),
-        #        axis.text.y=element_text(size=9,face="bold"),
-        #        legend.position="bottom"
-        #    ) +
-        #    scale_color_manual(values=color.list) +
-        #    scale_fill_manual(values=color.list) + 
-        #    scale_size_manual(values=size.list) + 
-        #    guides(size=FALSE)
+        rownames(maplot.data) <- as.character(ann$gene_id)
+        #maPlots$maPlot <- maplot.data
+        maPlots$maPlot <- ggplot(data=maplot.data) + 
+            geom_point(aes(x=A,y=M,colour=Status,fill=Status,size=Status,
+                text=Gene)) +
+            theme_bw() +
+            xlab("\nAverage expression") +
+            ylab("Fold change (log2)\n") +
+            theme(
+                axis.title.x=element_text(size=12),
+                axis.title.y=element_text(size=12),
+                axis.text.x=element_text(size=10,face="bold"),
+                axis.text.y=element_text(size=10,face="bold"),
+                legend.key=element_blank(),
+                legend.position="bottom"
+            ) +
+            scale_color_manual(values=color.list) +
+            scale_fill_manual(values=color.list) + 
+            scale_size_manual(values=size.list) + 
+            guides(size=FALSE)
+    })
+    
+    updateMaPlotColours <- reactive({
+        c <- isolate(maPlots$maColours)
+        lapply(names(c),function(x) {
+            observeEvent(input[[paste("maPlotColour_",x,sep="")]],{
+                newc <- input[[paste("maPlotColour_",x,sep="")]]
+                if (newc!=maPlots$maColours[[x]]) {
+                    maPlots$maColours[[x]] <- newc
+                    #areaExplorerMessages <- updateMessages(
+                    #    areaExplorerMessages,
+                    #    type="SUCCESS",
+                    #    msg=paste(getTime("SUCCESS"),"Class ",x," colour ",
+                    #    "changed! New colour: ",newc,sep="")
+                    #)
+                }
+        	})
+        })
     })
     
     return(list(
@@ -746,7 +802,8 @@ diffExprTabPanelReactive <- function(input,output,session,
         filterByGeneUpdate=filterByGeneUpdate,
         filterByChromosomeUpdate=filterByChromosomeUpdate,
         filterByBiotypeUpdate=filterByBiotypeUpdate,
-        updateMaPlot=updateMaPlot
+        updateMaPlot=updateMaPlot,
+        updateMaPlotColours=updateMaPlotColours
     ))
 }
 
@@ -1065,64 +1122,97 @@ diffExprTabPanelRenderUI <- function(output,session,allReactiveVars,
         })
     })
     
-    #output$rnaDeMAPlot <- renderPlot({
-    #    maPlots$maPlot
-    #})
-    
-    output$rnaDeMAPlot <- renderPlotly({
-        if (nrow(maPlots$maPlot)==1) {
-            ax <- list(
-              title="",
-              zeroline=FALSE,
-              showline=FALSE,
-              showticklabels=FALSE,
-              showgrid=FALSE
-            )
-            te <- list(
-                size=42,
-                color=toRGB("grey40")
-            )
-            plot_ly(
-                data=maPlots$maPlot,
-                x=A,
-                y=M,
-                text=Gene,
-                mode="text",
-                textfont=te
-            ) %>%
-            layout(xaxis=ax,yaxis=ax)
-        }
-        else {
-            cols <- c("green3","grey20","red3")
-            #size.list <- c(1,1,0.5)
-            dat <- maPlots$maPlot
-            dat <- dat[order(dat$Status),]
-            p <- plot_ly(
-                data=dat,
-                x=A,
-                y=M,
-                type="scatter",
-                mode="markers",
-                text=Gene,
-                color=Status,
-                colors=cols
-                #size=size.list
-            )
-            p <- layout(p,
-                xaxis=list(
-                    title="Average expression"
-                ),
-                yaxis=list(
-                    title="Fold change (log2)"
-                ),
-                legend=list(
-                    x=1,
-                    y=1
-                )
-            )
-            p
-        }
+    output$rnaDeMAPlot <- renderPlot({
+        maPlots$maPlot
     })
+    
+    output$maPlotColours <- renderUI({
+		c <- maPlots$maColours
+		lapply(names(c),function(x,c) {
+			colourInput(
+				inputId=paste("maPlotColour_",x,sep=""),
+				label=paste(x,"colour"),
+				value=c[[x]]
+			)
+		},c)
+    })
+    
+    output$exportRnaDeMAPlotPDF <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("ma_plot_",tt,".pdf", sep='')
+        },
+        content=function(con) {
+            ggsave(filename=con,plot=maPlots$maPlot,
+                width=10,height=7)
+        }
+    )
+    
+    output$exportRnaDeMAPlotPNG <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("ma_plot_",tt,".png", sep='')
+        },
+        content=function(con) {
+            ggsave(filename=con,plot=maPlots$maPlot,
+                width=10,height=7)
+        }
+    )
+    
+    output$exportRnaDeMAPlotGG2 <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("ma_plot_",tt,".rda", sep='')
+        },
+        content=function(con) {
+			gg <- maPlots$maPlot
+            save(gg,file=con)
+        }
+    )
+    
+    #output$rnaDeMAPlot <- renderPlotly({
+	#	if (nrow(maPlots$maPlot)==1 && maPlots$maPlot$Status==1) {
+    #        ax <- list(
+    #          title="",zeroline=FALSE,showline=FALSE,
+    #          showticklabels=FALSE,showgrid=FALSE
+    #        )
+    #        te <- list(size=38,color=toRGB("grey20"))
+    #        plot_ly(
+    #            data=maPlots$maPlot,x=A,y=M,
+    #            text=Gene,mode="text",textfont=te
+    #        ) %>%
+    #        layout(xaxis=ax,yaxis=ax)
+    #    }
+    #    else {
+	#		if (!is.null(currentRnaDeTable$tableFilters$genes)) {
+    #            g <- currentRnaDeTable$tableFilters$genes
+    #            cols <- c("blue","grey80")
+    #            dat <- maPlots$maPlot[g,]
+	#			p <- plot_ly(
+	#				data=dat,x=A,y=M,
+	#				type="scatter",mode="markers",
+	#				text=Gene,color=Status,colors=cols
+	#			)
+    #        }
+    #        else {
+	#			cols <- c("green3","grey50","red3")
+	#			#size.list <- c(1,1,0.5)
+	#			dat <- maPlots$maPlot
+	#			dat <- dat[order(dat$Status),]
+	#			p <- plot_ly(
+	#				data=dat,x=A,y=M,
+	#				type="scatter",mode="markers",
+	#				text=Gene,color=Status,colors=cols
+	#			)
+	#		}
+	#		
+    #        p <- layout(p,
+    #            xaxis=list(title="Average expression"),
+    #            yaxis=list(title="Fold change (log2)"),
+    #            legend=list(x=1,y=1)
+    #        )
+    #    }
+    #})
 }
 
 diffExprTabPanelObserve <- function(input,output,session,
@@ -1167,6 +1257,8 @@ diffExprTabPanelObserve <- function(input,output,session,
     filterByBiotypeUpdate <- 
         diffExprTabPanelReactiveExprs$filterByBiotypeUpdate
     updateMaPlot <- diffExprTabPanelReactiveExprs$updateMaPlot
+    updateMaPlotColours <- 
+		diffExprTabPanelReactiveExprs$updateMaPlotColours
     
     diffExprTabPanelRenderUI(output,session,allReactiveVars,
         allReactiveMsgs)
@@ -1234,6 +1326,13 @@ diffExprTabPanelObserve <- function(input,output,session,
         }           
     })
     
+	observe({
+		if (input$toggleRnaDeZoom)
+			shinyjs::enable("resetRnaDeZoom")
+		else
+			shinyjs::disable("resetRnaDeZoom")
+	})
+    
     observe({
         if(isEmpty(currentRnaDeTable$totalTable)) {
             shinyjs::disable("statThresholdType")
@@ -1281,6 +1380,7 @@ diffExprTabPanelObserve <- function(input,output,session,
         filterByChromosomeUpdate()
         filterByBiotypeUpdate()
         updateMaPlot()
+        updateMaPlotColours()
     })
     
     observe({

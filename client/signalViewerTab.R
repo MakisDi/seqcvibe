@@ -169,10 +169,16 @@ geneSignalTabPanel <- function() {
 		fluidRow(column(12,
 			plotOutput("geneProfile",height="640px")
 		)),
-		fluidRow(column(8,
+		fluidRow(column(6,
 			div("")
-		),
-		column(2,
+		),column(2,
+			downloadButton(
+				outputId="exportGeneGG2",
+				label="Export ggplot2",
+				#icon=icon("file-image-o"),
+				class="pull-right"
+			)
+		),column(2,
 			downloadButton(
 				outputId="exportGenePNG",
 				label="Export PNG",
@@ -404,10 +410,17 @@ areaSignalTabPanel <- function() {
 		fluidRow(column(12,
 			plotOutput("areaProfile",height="640px")
 		)),
-		fluidRow(column(8,
+		fluidRow(column(6,
 			div("")
 		),
 		column(2,
+			downloadButton(
+				outputId="exportAreaGG2",
+				label="Export ggplot2",
+				#icon=icon("file-image-o"),
+				class="pull-right"
+			)
+		),column(2,
 			downloadButton(
 				outputId="exportAreaPNG",
 				label="Export PNG",

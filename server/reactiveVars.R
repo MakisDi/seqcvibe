@@ -110,27 +110,31 @@ initReactiveVars <- function() {
     )
     
     maPlots <- reactiveValues(
-        #maPlot=data.frame(A=1:100,M=1:100,Status=1:100,Gene=1:100),
-        maPlot=data.frame(A=1,M=1,Status=1,
-            Gene="Resulting MA plots will\nbe displayed here"),
-        #maPlot=ggplot(data=data.frame(x=1:100,y=1:100)) + 
-        #    geom_text(data=data.frame(x=50,y=50,
-        #        label="Resulting MA plots will\nbe displayed here"),
-        #        aes(x=x,y=y,label=label),size=10) +
-        #    theme(
-        #        axis.line=element_blank(),
-        #        axis.text.x=element_blank(),
-        #        axis.text.y=element_blank(),
-        #        axis.ticks=element_blank(),
-        #        axis.title.x=element_blank(),
-        #        axis.title.y=element_blank(),
-        #        legend.position="none",
-        #        panel.background=element_blank(),
-        #        panel.border=element_blank(),
-        #        panel.grid.major=element_blank(),
-        #        panel.grid.minor=element_blank(),
-        #        plot.background=element_blank()
-        #    ),
+        #maPlot=data.frame(A=1,M=1,Status=1,
+        #    Gene="Resulting MA plots will be displayed here"),
+        maPlot=ggplot(data=data.frame(x=1:100,y=1:100)) + 
+            geom_text(data=data.frame(x=50,y=50,
+                label="Resulting MA plots will\nbe displayed here"),
+                aes(x=x,y=y,label=label),size=10) +
+            theme(
+                axis.line=element_blank(),
+                axis.text.x=element_blank(),
+                axis.text.y=element_blank(),
+                axis.ticks=element_blank(),
+                axis.title.x=element_blank(),
+                axis.title.y=element_blank(),
+                legend.position="none",
+                panel.background=element_blank(),
+                panel.border=element_blank(),
+                panel.grid.major=element_blank(),
+                panel.grid.minor=element_blank(),
+                plot.background=element_blank()
+            ),
+        maColours=list(
+			Up="#B40000",
+			Down="#00B400",
+			Neutral="#6B6B6B"
+        ),
         rendered=TRUE
     )
     

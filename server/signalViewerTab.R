@@ -604,6 +604,17 @@ geneSignalTabPanelRenderUI <- function(output,session,allReactiveVars,
                 width=10,height=7)
         }
     )
+    
+    output$exportGeneGG2 <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("gene_plot_",tt,".rda", sep='')
+        },
+        content=function(con) {
+			gg <- genePlots$geneProfile
+            save(gg,file=con)
+        }
+    )
 }
 
 geneSignalTabPanelObserve <- function(input,output,session,allReactiveVars,
@@ -1259,6 +1270,17 @@ areaSignalTabPanelRenderUI <- function(output,session,allReactiveVars,
         content=function(con) {
             ggsave(filename=con,plot=areaPlots$areaProfile,
                 width=14,height=7)
+        }
+    )
+    
+    output$exportAreaGG2 <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("area_plot_",tt,".rda", sep='')
+        },
+        content=function(con) {
+			gg <- areaPlots$areaProfile
+            save(gg,file=con)
         }
     )
 }

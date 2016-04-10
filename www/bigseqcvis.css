@@ -10,6 +10,10 @@
     color: #787878;
 }
 
+.btn-with-margin {
+	margin-top: 10px;
+}
+
 .error-message {
     color: #FF0000;
     font-size: 0.8em;
@@ -104,6 +108,22 @@
 
 .plot-container {
     height: 600px;
+}
+
+.vertical-center {
+    display: inline-block;
+    vertical-align: middle !important;
+    float: none;
+}
+.vertical-top {
+    display: inline-block;
+    vertical-align: top !important;
+    float: none;
+}
+.vertical-bottom {
+    display: inline-block;
+    vertical-align: bottom  !important;
+    float: none;
 }
 
 #dataSamples option {
