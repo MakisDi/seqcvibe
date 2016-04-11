@@ -1,7 +1,10 @@
 diffExprTabPanelEventReactive <- function(input,output,session,
     allReactiveVars,allReactiveMsgs) {
     currentMetadata <- allReactiveVars$currentMetadata
+    customRnaRegions <- allReactiveVars$customRnaRegions
+    currentCustomRnaTables <- allReactiveVars$currentCustomRnaTables
     currentPipelineOutput <- allReactiveVars$currentPipelineOutput
+    maPlots <- allReactiveVars$maPlots
     
     runPipeline <- eventReactive(input$performDeAnalysis,{
         require(metaseqR)
@@ -16,24 +19,24 @@ diffExprTabPanelEventReactive <- function(input,output,session,
         # Check if we have counts from custom regions
         addAnn <- NULL
         if (input$includeCustomRegions) {
-			if (!is.null(customRnaRegions$name)) {
-				addAnn <- data.frame(
-					chromosome=as.character(customRnaRegions$chromosome),
-					start=as.integer(customRnaRegions$start),
-					end=as.integer(customRnaRegions$end),
-					gene_id=as.character(customRnaRegions$name),
-					gc_content=rep(0,length(customRnaRegions$name)),
-					strand=as.character(customRnaRegions$strand),
-					gene_name=as.character(customRnaRegions$name),
-					biotype=rep("unknown",length(customRnaRegions$name))
-				)
-				rownames(addAnn) <- addAnn$gene_id
-			}
-			if (!is.null(currentCustomRnaTables$lengths)) {
-				addAnn <- cbind(addAnn,currentCustomRnaTables$lengths)
-				names(addAnn)[ncol(addAnn)] <- "active_length"
-			}
-		}
+            if (!is.null(customRnaRegions$name)) {
+                addAnn <- data.frame(
+                    chromosome=as.character(customRnaRegions$chromosome),
+                    start=as.integer(customRnaRegions$start),
+                    end=as.integer(customRnaRegions$end),
+                    gene_id=as.character(customRnaRegions$name),
+                    gc_content=rep(0,length(customRnaRegions$name)),
+                    strand=as.character(customRnaRegions$strand),
+                    gene_name=as.character(customRnaRegions$name),
+                    biotype=rep("unknown",length(customRnaRegions$name))
+                )
+                rownames(addAnn) <- addAnn$gene_id
+            }
+            if (!is.null(currentCustomRnaTables$lengths)) {
+                addAnn <- cbind(addAnn,currentCustomRnaTables$lengths)
+                names(addAnn)[ncol(addAnn)] <- "active_length"
+            }
+        }
         
         # Construct annotation
         ann <- data.frame(
@@ -59,13 +62,15 @@ diffExprTabPanelEventReactive <- function(input,output,session,
         
         # Custom counts
         A <- NULL
-        if (!is.null(currentCustomRnaTables$lengths)) {
-			A <- do.call("cbind",currentCustomRnaTables$tables)
-			A <- A[,colnames(M)]
-		}
-		M <- rbind(M,A)
-		
-		# Final feed to metaseqr
+        if (input$includeCustomRegions) {
+            if (!is.null(currentCustomRnaTables$lengths)) {
+                A <- do.call("cbind",currentCustomRnaTables$tables)
+                A <- A[,colnames(M)]
+            }
+        }
+        M <- rbind(M,A)
+        
+        # Final feed to metaseqr
         D <- cbind(ann,M)
         
         # Set up sample and contrast list for metaseqr
@@ -208,8 +213,16 @@ diffExprTabPanelEventReactive <- function(input,output,session,
         currentPipelineOutput$fdr <- pipOutput$complete$fdr
     })
     
+    resetMaZoom <- eventReactive(input$resetRnaDeZoom,{
+        if (!is.null(maPlots$maZoom$x))
+            maPlots$maZoom$x <- NULL
+        if (!is.null(maPlots$maZoom$y))
+            maPlots$maZoom$y <- NULL
+    })
+    
     return(list(
-        runPipeline=runPipeline
+        runPipeline=runPipeline,
+        resetMaZoom=resetMaZoom
     ))
 }
 
@@ -265,7 +278,6 @@ diffExprTabPanelReactive <- function(input,output,session,
                             unlist(loadedData[[s]][[d]]$libsize[colnames(tab)])
                         tab <- round(edgeR::rpkm(tab,gene.length=len,
                             lib.size=libsize),digits=6)
-                        print(tab)
                     },
                     rpgm = {
                         len <- loadedData[[s]][[d]]$length[g]
@@ -407,6 +419,22 @@ diffExprTabPanelReactive <- function(input,output,session,
                 as.data.frame(stdMatrix),
                 as.data.frame(flags[filterInds$fold,])
             )
+                
+            if (input$toggleRnaDeTableUpdate) {
+                tabClick <- 
+                    nearPoints(maPlots$maData,input$rnaDeMAPlotDblClick,
+                        xvar="A",yvar="M",allRows=TRUE)
+                selcl <- which(tabClick$selected_)
+                if (length(selcl)>0)
+                    totalTable <- totalTable[rownames(tabClick[selcl,]),]
+                    
+                tabBrush <- 
+                    brushedPoints(maPlots$maData,input$rnaDeMAPlotBrush,
+                        xvar="A",yvar="M",allRows=TRUE)
+                selbr <- which(tabBrush$selected_)
+                if (length(selbr)>0)
+                    totalTable <- totalTable[rownames(tabBrush[selbr,]),]
+            }
             
             currentRnaDeTable$totalTable <- totalTable
         }
@@ -695,7 +723,6 @@ diffExprTabPanelReactive <- function(input,output,session,
         p <- p[expr,,drop=FALSE]
         fdr <- fdr[expr,,drop=FALSE]
         
-        
         fct <- currentRnaDeTable$tableFilters$fc
         pcut <- currentRnaDeTable$tableFilters$p
         fdrcut <- currentRnaDeTable$tableFilters$fdr
@@ -745,6 +772,19 @@ diffExprTabPanelReactive <- function(input,output,session,
             Gene=as.character(ann$gene_name)
         )
         rownames(maplot.data) <- as.character(ann$gene_id)
+        maPlots$maData <- maplot.data
+        
+        if (!is.null(currentRnaDeTable$tableFilters$genes)) {
+            g <- currentRnaDeTable$tableFilters$genes
+            ts <- maplot.data[g,,drop=FALSE]
+            ts$Status <- rep(paste("Selected (",length(g)," genes)",sep=""),
+                nrow(ts))
+            size.list <- c(size.list,5)
+            color.list <- c(color.list,"orange")
+            names(size.list)[4] <- names(color.list)[4] <- ts$Status[1]
+            maplot.data <- rbind(maplot.data,ts)
+        }
+        
         #maPlots$maPlot <- maplot.data
         maPlots$maPlot <- ggplot(data=maplot.data) + 
             geom_point(aes(x=A,y=M,colour=Status,fill=Status,size=Status,
@@ -752,6 +792,7 @@ diffExprTabPanelReactive <- function(input,output,session,
             theme_bw() +
             xlab("\nAverage expression") +
             ylab("Fold change (log2)\n") +
+            coord_cartesian(xlim=maPlots$maZoom$x,ylim=maPlots$maZoom$y) +
             theme(
                 axis.title.x=element_text(size=12),
                 axis.title.y=element_text(size=12),
@@ -780,8 +821,26 @@ diffExprTabPanelReactive <- function(input,output,session,
                     #    "changed! New colour: ",newc,sep="")
                     #)
                 }
-        	})
+            })
         })
+    })
+    
+    updateMaZoomCoords <- reactive({
+        if (input$toggleRnaDeZoom) {
+            brush <- input$rnaDeMAPlotBrush
+            if (!is.null(brush)) {
+                maPlots$maZoom$x <- c(brush$xmin,brush$xmax)
+                maPlots$maZoom$y <- c(brush$ymin,brush$ymax)
+            } 
+            else {
+                maPlots$maZoom$x <- NULL
+                maPlots$maZoom$x <- NULL
+            }
+        }
+        else {
+            maPlots$maZoom$x <- NULL
+            maPlots$maZoom$x <- NULL
+        }
     })
     
     return(list(
@@ -803,7 +862,8 @@ diffExprTabPanelReactive <- function(input,output,session,
         filterByChromosomeUpdate=filterByChromosomeUpdate,
         filterByBiotypeUpdate=filterByBiotypeUpdate,
         updateMaPlot=updateMaPlot,
-        updateMaPlotColours=updateMaPlotColours
+        updateMaPlotColours=updateMaPlotColours,
+        updateMaZoomCoords=updateMaZoomCoords
     ))
 }
 
@@ -1127,14 +1187,14 @@ diffExprTabPanelRenderUI <- function(output,session,allReactiveVars,
     })
     
     output$maPlotColours <- renderUI({
-		c <- maPlots$maColours
-		lapply(names(c),function(x,c) {
-			colourInput(
-				inputId=paste("maPlotColour_",x,sep=""),
-				label=paste(x,"colour"),
-				value=c[[x]]
-			)
-		},c)
+        c <- maPlots$maColours
+        lapply(names(c),function(x,c) {
+            colourInput(
+                inputId=paste("maPlotColour_",x,sep=""),
+                label=paste(x,"colour"),
+                value=c[[x]]
+            )
+        },c)
     })
     
     output$exportRnaDeMAPlotPDF <- downloadHandler(
@@ -1165,13 +1225,13 @@ diffExprTabPanelRenderUI <- function(output,session,allReactiveVars,
             paste("ma_plot_",tt,".rda", sep='')
         },
         content=function(con) {
-			gg <- maPlots$maPlot
+            gg <- maPlots$maPlot
             save(gg,file=con)
         }
     )
     
     #output$rnaDeMAPlot <- renderPlotly({
-	#	if (nrow(maPlots$maPlot)==1 && maPlots$maPlot$Status==1) {
+    #   if (nrow(maPlots$maPlot)==1 && maPlots$maPlot$Status==1) {
     #        ax <- list(
     #          title="",zeroline=FALSE,showline=FALSE,
     #          showticklabels=FALSE,showgrid=FALSE
@@ -1184,28 +1244,28 @@ diffExprTabPanelRenderUI <- function(output,session,allReactiveVars,
     #        layout(xaxis=ax,yaxis=ax)
     #    }
     #    else {
-	#		if (!is.null(currentRnaDeTable$tableFilters$genes)) {
+    #       if (!is.null(currentRnaDeTable$tableFilters$genes)) {
     #            g <- currentRnaDeTable$tableFilters$genes
     #            cols <- c("blue","grey80")
     #            dat <- maPlots$maPlot[g,]
-	#			p <- plot_ly(
-	#				data=dat,x=A,y=M,
-	#				type="scatter",mode="markers",
-	#				text=Gene,color=Status,colors=cols
-	#			)
+    #           p <- plot_ly(
+    #               data=dat,x=A,y=M,
+    #               type="scatter",mode="markers",
+    #               text=Gene,color=Status,colors=cols
+    #           )
     #        }
     #        else {
-	#			cols <- c("green3","grey50","red3")
-	#			#size.list <- c(1,1,0.5)
-	#			dat <- maPlots$maPlot
-	#			dat <- dat[order(dat$Status),]
-	#			p <- plot_ly(
-	#				data=dat,x=A,y=M,
-	#				type="scatter",mode="markers",
-	#				text=Gene,color=Status,colors=cols
-	#			)
-	#		}
-	#		
+    #           cols <- c("green3","grey50","red3")
+    #           #size.list <- c(1,1,0.5)
+    #           dat <- maPlots$maPlot
+    #           dat <- dat[order(dat$Status),]
+    #           p <- plot_ly(
+    #               data=dat,x=A,y=M,
+    #               type="scatter",mode="markers",
+    #               text=Gene,color=Status,colors=cols
+    #           )
+    #       }
+    #       
     #        p <- layout(p,
     #            xaxis=list(title="Average expression"),
     #            yaxis=list(title="Fold change (log2)"),
@@ -1218,6 +1278,7 @@ diffExprTabPanelRenderUI <- function(output,session,allReactiveVars,
 diffExprTabPanelObserve <- function(input,output,session,
     allReactiveVars,allReactiveMsgs) {
     currentMetadata <- allReactiveVars$currentMetadata
+    customRnaRegions <- allReactiveVars$customRnaRegions
     currentRnaDeTable <- allReactiveVars$currentRnaDeTable
     
     diffExprTabPanelReactiveEvents <- 
@@ -1225,6 +1286,7 @@ diffExprTabPanelObserve <- function(input,output,session,
             allReactiveVars,allReactiveMsgs)
     
     runPipeline <- diffExprTabPanelReactiveEvents$runPipeline
+    resetMaZoom <- diffExprTabPanelReactiveEvents$resetMaZoom
     
     diffExprTabPanelReactiveExprs <- 
         diffExprTabPanelReactive(input,output,session,
@@ -1258,7 +1320,8 @@ diffExprTabPanelObserve <- function(input,output,session,
         diffExprTabPanelReactiveExprs$filterByBiotypeUpdate
     updateMaPlot <- diffExprTabPanelReactiveExprs$updateMaPlot
     updateMaPlotColours <- 
-		diffExprTabPanelReactiveExprs$updateMaPlotColours
+        diffExprTabPanelReactiveExprs$updateMaPlotColours
+    updateMaZoomCoords <- diffExprTabPanelReactiveExprs$updateMaZoomCoords
     
     diffExprTabPanelRenderUI(output,session,allReactiveVars,
         allReactiveMsgs)
@@ -1282,6 +1345,11 @@ diffExprTabPanelObserve <- function(input,output,session,
     
     observe({
         geneNames <- loadedGenomes[[currentMetadata$genome]]$geneNames
+        if (input$includeCustomRegions) {
+            ts <- as.character(customRnaRegions$name)
+            names(ts) <- ts
+            geneNames <- c(geneNames,ts)
+        }
         g <- isolate({input$rnaDeKnownFilter})
         i <- grep(paste0("^",g),geneNames,perl=TRUE)
         if (length(i)>0) {
@@ -1326,15 +1394,15 @@ diffExprTabPanelObserve <- function(input,output,session,
         }           
     })
     
-	observe({
-		if (input$toggleRnaDeZoom)
-			shinyjs::enable("resetRnaDeZoom")
-		else
-			shinyjs::disable("resetRnaDeZoom")
-	})
+    observe({
+        if (input$toggleRnaDeZoom)
+            shinyjs::enable("resetRnaDeZoom")
+        else
+            shinyjs::disable("resetRnaDeZoom")
+    })
     
     observe({
-        if(isEmpty(currentRnaDeTable$totalTable)) {
+        if(is.null(currentRnaDeTable$totalTable)) {
             shinyjs::disable("statThresholdType")
             shinyjs::disable("pvalue")
             shinyjs::disable("fdr")
@@ -1381,6 +1449,8 @@ diffExprTabPanelObserve <- function(input,output,session,
         filterByBiotypeUpdate()
         updateMaPlot()
         updateMaPlotColours()
+        updateMaZoomCoords()
+        resetMaZoom()
     })
     
     observe({

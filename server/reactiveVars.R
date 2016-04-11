@@ -130,10 +130,15 @@ initReactiveVars <- function() {
                 panel.grid.minor=element_blank(),
                 plot.background=element_blank()
             ),
+        maData=NULL,
         maColours=list(
-			Up="#B40000",
-			Down="#00B400",
-			Neutral="#6B6B6B"
+            Up="#B40000",
+            Down="#00B400",
+            Neutral="#6B6B6B"
+        ),
+        maZoom=list(
+            x=NULL,
+            y=NULL
         ),
         rendered=TRUE
     )

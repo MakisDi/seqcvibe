@@ -56,7 +56,7 @@ differentialExpressionTabPanel <- function() {
                             checkboxInput(
                                 inputId="includeCustomRegions",
                                 label=paste("Include regions from expression ",
-									"calculator"),
+                                    "calculator"),
                                 value=FALSE
                             )
                         ))
@@ -309,98 +309,107 @@ differentialExpressionTabPanel <- function() {
             #    )
             #)
             #plotlyOutput("rnaDeMAPlot",height="640px")
-            plotOutput("rnaDeMAPlot",height="640px")
+            plotOutput(
+                outputId="rnaDeMAPlot",
+                click="rnaDeMAPlotClick",
+                dblclick="rnaDeMAPlotDblClick",
+                brush=brushOpts(
+                    id="rnaDeMAPlotBrush",
+                    resetOnNew=TRUE
+                ),
+                height="660px"
+            )
         ),column(2,
-			wellPanel(
-				h4("Plot behaviour"),
-				fluidRow(column(12,
-					checkboxInput(
-						inputId="toggleRnaDeTableUpdate",
-						label="Real time table update",
-						value=FALSE
-					),
-					checkboxInput(
-						inputId="toggleRnaDeZoom",
-						label="Toggle zoom",
-						value=FALSE
-					)				
-				)),
-				fluidRow(column(12,
-					disabled(actionButton(
-						inputId="resetRnaDeZoom",
-						label="Reset zoom",
-						icon=icon("home"),
-						class="btn-sm pull-right"
-					))
-				))
-			),
-			wellPanel(
-				fluidRow(column(12,
-					h4("Plot controls"),
-					htmlOutput("maPlotColours")
-				)),
-				fluidRow(column(12,
-					downloadButton(
-						outputId="exportRnaDeMAPlotGG2",
-						label="Export ggplot2",
-						#icon=icon("file-image-o"),
-						class="btn-with-margin"
-					)
-				)),
-				fluidRow(column(12,
-					downloadButton(
-						outputId="exportRnaDeMAPlotPNG",
-						label="Export PNG",
-						#icon=icon("file-image-o"),
-						class="btn-with-margin"
-					)
-				)),
-				fluidRow(column(12,
-					downloadButton(
-						outputId="exportRnaDeMAPlotPDF",
-						label="Export PDF",
-						#icon=icon("file-pdf-o"),
-						class="btn-with-margin"
-					)
-				))
-			)
-		)),
-		fluidRow(br()),
+            wellPanel(
+                h4("Plot behaviour"),
+                fluidRow(column(12,
+                    checkboxInput(
+                        inputId="toggleRnaDeTableUpdate",
+                        label="Real time table update",
+                        value=FALSE
+                    ),
+                    checkboxInput(
+                        inputId="toggleRnaDeZoom",
+                        label="Toggle zoom",
+                        value=FALSE
+                    )               
+                )),
+                fluidRow(column(12,
+                    disabled(actionButton(
+                        inputId="resetRnaDeZoom",
+                        label="Reset zoom",
+                        icon=icon("home"),
+                        class="btn-sm pull-right"
+                    ))
+                ))
+            ),
+            wellPanel(
+                fluidRow(column(12,
+                    h4("Plot controls"),
+                    htmlOutput("maPlotColours")
+                )),
+                fluidRow(column(12,
+                    downloadButton(
+                        outputId="exportRnaDeMAPlotGG2",
+                        label="Export ggplot2",
+                        #icon=icon("file-image-o"),
+                        class="btn-with-margin"
+                    )
+                )),
+                fluidRow(column(12,
+                    downloadButton(
+                        outputId="exportRnaDeMAPlotPNG",
+                        label="Export PNG",
+                        #icon=icon("file-image-o"),
+                        class="btn-with-margin"
+                    )
+                )),
+                fluidRow(column(12,
+                    downloadButton(
+                        outputId="exportRnaDeMAPlotPDF",
+                        label="Export PDF",
+                        #icon=icon("file-pdf-o"),
+                        class="btn-with-margin"
+                    )
+                ))
+            )
+        )),
+        fluidRow(br()),
         fluidRow(column(12,
-			wellPanel(
-				tabsetPanel(
-					id="rnaDeAnalysisResults",
-					tabPanel(
-						title="Summary",
-						fluidRow(br()),
-						fluidRow(column(12,
-							htmlOutput("rnaDeAnalysisSummary")
-						))
-					),
-					tabPanel(
-						title="Annotation",
-						fluidRow(br()),
-						fluidRow(column(12,
-							htmlOutput("rnaDeAnalysisAnnotation")
-						))
-					),
-					tabPanel(
-						title="Flags",
-						fluidRow(br()),
-						fluidRow(column(12,
-							htmlOutput("rnaDeAnalysisFlags")
-						))
-					),
-					tabPanel(
-						title="All",
-						fluidRow(br()),
-						fluidRow(column(12,
-							htmlOutput("rnaDeAnalysisAll")
-						))
-					)
-				)
-			)
-		))
+            wellPanel(
+                tabsetPanel(
+                    id="rnaDeAnalysisResults",
+                    tabPanel(
+                        title="Summary",
+                        fluidRow(br()),
+                        fluidRow(column(12,
+                            htmlOutput("rnaDeAnalysisSummary")
+                        ))
+                    ),
+                    tabPanel(
+                        title="Annotation",
+                        fluidRow(br()),
+                        fluidRow(column(12,
+                            htmlOutput("rnaDeAnalysisAnnotation")
+                        ))
+                    ),
+                    tabPanel(
+                        title="Flags",
+                        fluidRow(br()),
+                        fluidRow(column(12,
+                            htmlOutput("rnaDeAnalysisFlags")
+                        ))
+                    ),
+                    tabPanel(
+                        title="All",
+                        fluidRow(br()),
+                        fluidRow(column(12,
+                            htmlOutput("rnaDeAnalysisAll")
+                        ))
+                    )
+                )
+            )
+        ))
     ))
 }
 

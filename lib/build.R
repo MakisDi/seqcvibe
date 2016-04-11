@@ -292,23 +292,44 @@ bam2count <- function(targets,annotation,rc=NULL) {
             }
             if (is.remote)
                 message("    ...for remote BAM file... might take longer...")
-            counts <- summarizeOverlaps(annotation.gr,reads,
-                singleEnd=singleEnd,fragments=fragments,
-                ignore.strand=ignore.strand)
-            counts <- assays(counts)$counts
+            counts <- tryCatch(
+                summarizeOverlaps(annotation.gr,reads,singleEnd=singleEnd,
+                    fragments=fragments,ignore.strand=ignore.strand),
+                error=function(e) {
+                    message("Caught error while reading BAM file: ",
+                    sample.files[n])
+                    message("====================")
+                    print(e)
+                    message("====================")
+                    return("Error")
+                },finally=""
+            )
+            print(counts)
+            if (counts!="Error")
+                counts <- assays(counts)$counts
         }
-        else
+        else {
             warning(paste("No reads left after annotation chromosome ",
                 "presence check for sample ",n,sep=""))
+            counts <- "Error"
+        }
         gc(verbose=FALSE)
         return(list(counts=counts,libsize=libsize))
     },sample.files,paired,stranded,rc=rc)
     
+    failed <- numeric(0)
     for (i in 1:length(ret.val)) {
-        counts[,i] <- ret.val[[i]]$counts
-        libsize[[i]] <- ret.val[[i]]$libsize
+        if (ret.val[[i]]$counts!="Error") {
+            counts[,i] <- ret.val[[i]]$counts
+            libsize[[i]] <- ret.val[[i]]$libsize
+        }
+        else
+            failed <- c(failed,i)       
     }
-    
+    if (length(failed)>0) {
+        counts <- counts[,-failed]
+        libsize <- libsize[-failed]
+    }
     return(list(counts=counts,libsize=libsize,length=coding.length))
 }
 
