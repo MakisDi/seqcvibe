@@ -216,6 +216,13 @@ differentialExpressionTabPanel <- function() {
                                     step=0.5
                                 ))
                             )
+                        )),
+                        fluidRow(column(12,
+                            disabled(selectizeInput(
+                                inputId="rnaDeCurrentContrast",
+                                label="Select contrast for fold change",
+                                choices=NULL
+                            ))
                         ))
                     ),
                     tabPanel(
@@ -467,7 +474,7 @@ correlationTabPanel <- function() {
     ))
 }
 
-pathwayTabPanel <- function() {
+clusteringTabPanel <- function() {
     fluidRow(column(3,
         wellPanel(
             fluidRow(column(12,
@@ -483,7 +490,7 @@ pathwayTabPanel <- function() {
     ))
 }
 
-goTabPanel <- function() {
+goPathwayTabPanel <- function() {
     fluidRow(column(3,
         wellPanel(
             fluidRow(column(12,

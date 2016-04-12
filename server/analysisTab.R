@@ -213,6 +213,20 @@ diffExprTabPanelEventReactive <- function(input,output,session,
         currentPipelineOutput$fdr <- pipOutput$complete$fdr
     })
     
+    updateMaZoomCoords <- eventReactive(input$rnaDeMAPlotDblClick,{
+        if (input$toggleRnaDeZoom) {
+            brush <- input$rnaDeMAPlotBrush
+            if (!is.null(brush)) {
+                maPlots$maZoom$x <- c(brush$xmin,brush$xmax)
+                maPlots$maZoom$y <- c(brush$ymin,brush$ymax)
+            }
+        }
+        else {
+            maPlots$maZoom$x <- NULL
+            maPlots$maZoom$y <- NULL
+        }
+    })
+    
     resetMaZoom <- eventReactive(input$resetRnaDeZoom,{
         if (!is.null(maPlots$maZoom$x))
             maPlots$maZoom$x <- NULL
@@ -222,6 +236,7 @@ diffExprTabPanelEventReactive <- function(input,output,session,
     
     return(list(
         runPipeline=runPipeline,
+        updateMaZoomCoords=updateMaZoomCoords,
         resetMaZoom=resetMaZoom
     ))
 }
@@ -245,7 +260,7 @@ diffExprTabPanelReactive <- function(input,output,session,
         pValue <- currentPipelineOutput$pValue
         fdr <- currentPipelineOutput$fdr
         
-        if (!is.null(counts)) {
+        if (!is.null(counts) && !isEmpty(input$rnaDeCurrentContrast)) {
             p <- pValue[[contrastList[1]]][,1,drop=FALSE]
             fdr <- fdr[[contrastList[1]]][,1,drop=FALSE]
             
@@ -302,14 +317,98 @@ diffExprTabPanelReactive <- function(input,output,session,
                     makeStat(x,tab,s,v)
                 },tab,input$rnaDeValueAverageRadio,input$rnaDeValueCompRadio))
                 colnames(avgMatrix) <- paste(names(classList),
-                    input$rnaDeValueAverageRadio)
+                    input$rnaDeValueAverageRadio,sep="_")
                 
                 stdMatrix <- do.call("cbind",lapply(classList,
                 function(x,tab,s,v) {
                     makeStat(x,tab,s,v)
                 },tab,input$rnaDeValueDeviationRadio,input$rnaDeValueCompRadio))
                 colnames(stdMatrix) <- paste(names(classList),
-                    input$rnaDeValueDeviationRadio)
+                    input$rnaDeValueDeviationRadio,sep="_")
+                
+                totalTable <- cbind(
+                    ann <- ann[g,,drop=FALSE],
+                    sumTable,
+                    fcMat,
+                    as.data.frame(avgMatrix),
+                    as.data.frame(stdMatrix),
+                    as.data.frame(flags[g,,drop=FALSE])
+                )               
+                currentRnaDeTable$totalTable <- totalTable
+                return()
+            }
+            
+            # If interacting with the MA plot
+            if (input$toggleRnaDeTableUpdate) {
+                g <- NULL
+                # If from click
+                tabClick <- 
+                    nearPoints(maPlots$maData,input$rnaDeMAPlotClick,
+                        xvar="A",yvar="M",allRows=TRUE)
+                selcl <- which(tabClick$selected_)
+                if (length(selcl)>0)
+                    g <- rownames(tabClick[selcl,])
+                
+                # If from brush
+                tabBrush <- 
+                    brushedPoints(maPlots$maData,input$rnaDeMAPlotBrush,
+                        xvar="A",yvar="M",allRows=TRUE)
+                selbr <- which(tabBrush$selected_)
+                if (length(selbr)>0)
+                    g <- rownames(tabClick[selbr,])
+                
+                if (isEmpty(g))
+                    return()
+                
+                tab <- counts[g,,drop=FALSE]
+                sumTable <- data.frame(
+                    pvalue=p[g,,drop=FALSE],
+                    fdr=fdr[g,,drop=FALSE]
+                )
+                names(sumTable) <- c("pvalue","fdr")
+                
+                switch(input$rnaDeValueCompRadio,
+                    counts = {
+                        tab <- tab
+                    },
+                    rpkm = {
+                        len <- loadedData[[s]][[d]]$length[g]
+                        libsize <- 
+                            unlist(loadedData[[s]][[d]]$libsize[colnames(tab)])
+                        tab <- round(edgeR::rpkm(tab,gene.length=len,
+                            lib.size=libsize),digits=6)
+                    },
+                    rpgm = {
+                        len <- loadedData[[s]][[d]]$length[g]
+                        for (j in 1:ncol(tab))
+                            tab[,j] <- round(tab[,j]/len,digits=6)
+                    }
+                )
+                switch(input$rnaDeValueScaleRadio,
+                    natural = {
+                        tab <- tab
+                    },
+                    log2 = {
+                        tab <- round(log2(tab+1),digits=6)
+                    }
+                )
+                
+                fcMat <- round(makeFoldChange(contrastList[1],classList,tab,
+                    input$rnaDeValueScaleRadio),6)
+            
+                avgMatrix <- do.call("cbind",lapply(classList,
+                function(x,tab,s,v) {
+                    makeStat(x,tab,s,v)
+                },tab,input$rnaDeValueAverageRadio,input$rnaDeValueCompRadio))
+                colnames(avgMatrix) <- paste(names(classList),
+                    input$rnaDeValueAverageRadio,sep="_")
+                
+                stdMatrix <- do.call("cbind",lapply(classList,
+                function(x,tab,s,v) {
+                    makeStat(x,tab,s,v)
+                },tab,input$rnaDeValueDeviationRadio,input$rnaDeValueCompRadio))
+                colnames(stdMatrix) <- paste(names(classList),
+                    input$rnaDeValueDeviationRadio,sep="_")
                 
                 totalTable <- cbind(
                     ann <- ann[g,,drop=FALSE],
@@ -386,8 +485,9 @@ diffExprTabPanelReactive <- function(input,output,session,
             
             fcMat <- round(makeFoldChange(contrastList[1],classList,tab,
                 input$rnaDeValueScaleRadio),6)
-                
-            tmp <- names(which(apply(fcMat,1,function(x,f) {
+            
+            tmp <- names(which(apply(fcMat[,input$rnaDeCurrentContrast,
+                drop=FALSE],1,function(x,f) {
                 return(any(x<=f[1] | x>=f[2]))
             },filters$fc)))
             
@@ -403,13 +503,14 @@ diffExprTabPanelReactive <- function(input,output,session,
                 makeStat(x,tab,s,v)
             },tab,input$rnaDeValueAverageRadio,input$rnaDeValueCompRadio))
             colnames(avgMatrix) <- paste(names(classList),
-                input$rnaDeValueAverageRadio)
+                input$rnaDeValueAverageRadio,sep="_")
             
             stdMatrix <- do.call("cbind",lapply(classList,function(x,tab,s,v) {
                 makeStat(x,tab,s,v)
             },tab,input$rnaDeValueDeviationRadio,input$rnaDeValueCompRadio))
             colnames(stdMatrix) <- paste(names(classList),
-                input$rnaDeValueDeviationRadio,input$rnaDeValueCompRadio)
+                input$rnaDeValueDeviationRadio,input$rnaDeValueCompRadio,
+                sep="_")
             
             totalTable <- cbind(
                 ann[filterInds$fold,],
@@ -419,22 +520,7 @@ diffExprTabPanelReactive <- function(input,output,session,
                 as.data.frame(stdMatrix),
                 as.data.frame(flags[filterInds$fold,])
             )
-                
-            if (input$toggleRnaDeTableUpdate) {
-                tabClick <- 
-                    nearPoints(maPlots$maData,input$rnaDeMAPlotDblClick,
-                        xvar="A",yvar="M",allRows=TRUE)
-                selcl <- which(tabClick$selected_)
-                if (length(selcl)>0)
-                    totalTable <- totalTable[rownames(tabClick[selcl,]),]
-                    
-                tabBrush <- 
-                    brushedPoints(maPlots$maData,input$rnaDeMAPlotBrush,
-                        xvar="A",yvar="M",allRows=TRUE)
-                selbr <- which(tabBrush$selected_)
-                if (length(selbr)>0)
-                    totalTable <- totalTable[rownames(tabBrush[selbr,]),]
-            }
+            rownames(totalTable) <- as.character(ann[filterInds$fold,"gene_id"])
             
             currentRnaDeTable$totalTable <- totalTable
         }
@@ -710,7 +796,8 @@ diffExprTabPanelReactive <- function(input,output,session,
     })
     
     updateMaPlot <- reactive({
-        if (isEmpty(currentPipelineOutput$counts))
+        if (isEmpty(currentPipelineOutput$counts) 
+            || isEmpty(input$rnaDeCurrentContrast))
             return()
         
         classList <- currentPipelineOutput$classList
@@ -749,8 +836,9 @@ diffExprTabPanelReactive <- function(input,output,session,
         
         status <- rep(NA,nrow(tab))
         cat.ind <- list()
-        cat.ind$up <- which(fcMat[,1]>=fct[2] & SC<sc)
-        cat.ind$down <- which(fcMat[,1]<=fct[1] & SC<sc)
+        cat.ind$up <- which(fcMat[,input$rnaDeCurrentContrast]>=fct[2] & SC<sc)
+        cat.ind$down <- 
+            which(fcMat[,input$rnaDeCurrentContrast]<=fct[1] & SC<sc)
         cat.ind$neutral <- setdiff(1:nrow(tab),c(cat.ind$up,cat.ind$down))
         names(cat.ind) <- c(
             paste("Up (",length(cat.ind$up)," genes)",sep=""),
@@ -825,24 +913,6 @@ diffExprTabPanelReactive <- function(input,output,session,
         })
     })
     
-    updateMaZoomCoords <- reactive({
-        if (input$toggleRnaDeZoom) {
-            brush <- input$rnaDeMAPlotBrush
-            if (!is.null(brush)) {
-                maPlots$maZoom$x <- c(brush$xmin,brush$xmax)
-                maPlots$maZoom$y <- c(brush$ymin,brush$ymax)
-            } 
-            else {
-                maPlots$maZoom$x <- NULL
-                maPlots$maZoom$x <- NULL
-            }
-        }
-        else {
-            maPlots$maZoom$x <- NULL
-            maPlots$maZoom$x <- NULL
-        }
-    })
-    
     return(list(
         rnaDeTotalTable=rnaDeTotalTable,
         handleRnaDeAnalysisSummarySelection=handleRnaDeAnalysisSummarySelection,
@@ -862,8 +932,7 @@ diffExprTabPanelReactive <- function(input,output,session,
         filterByChromosomeUpdate=filterByChromosomeUpdate,
         filterByBiotypeUpdate=filterByBiotypeUpdate,
         updateMaPlot=updateMaPlot,
-        updateMaPlotColours=updateMaPlotColours,
-        updateMaZoomCoords=updateMaZoomCoords
+        updateMaPlotColours=updateMaPlotColours
     ))
 }
 
@@ -1279,6 +1348,7 @@ diffExprTabPanelObserve <- function(input,output,session,
     allReactiveVars,allReactiveMsgs) {
     currentMetadata <- allReactiveVars$currentMetadata
     customRnaRegions <- allReactiveVars$customRnaRegions
+    currentPipelineOutput <- allReactiveVars$currentPipelineOutput
     currentRnaDeTable <- allReactiveVars$currentRnaDeTable
     
     diffExprTabPanelReactiveEvents <- 
@@ -1286,6 +1356,7 @@ diffExprTabPanelObserve <- function(input,output,session,
             allReactiveVars,allReactiveMsgs)
     
     runPipeline <- diffExprTabPanelReactiveEvents$runPipeline
+    updateMaZoomCoords <- diffExprTabPanelReactiveEvents$updateMaZoomCoords
     resetMaZoom <- diffExprTabPanelReactiveEvents$resetMaZoom
     
     diffExprTabPanelReactiveExprs <- 
@@ -1321,13 +1392,27 @@ diffExprTabPanelObserve <- function(input,output,session,
     updateMaPlot <- diffExprTabPanelReactiveExprs$updateMaPlot
     updateMaPlotColours <- 
         diffExprTabPanelReactiveExprs$updateMaPlotColours
-    updateMaZoomCoords <- diffExprTabPanelReactiveExprs$updateMaZoomCoords
     
     diffExprTabPanelRenderUI(output,session,allReactiveVars,
         allReactiveMsgs)
     
     observe({
         rnaDeTotalTable()
+    })
+    
+    observe({
+        if (!isEmpty(currentPipelineOutput$contrastList)) {
+            conds <- strsplit(currentPipelineOutput$contrastList[1],"_vs_")[[1]]
+            cn <- paste(conds[1:(length(conds)-1)],"_vs_",
+                conds[length(conds)],sep="")
+            names(cn) <- paste(conds[1:(length(conds)-1)],"vs",
+                conds[length(conds)])
+            updateSelectizeInput(session,"rnaDeCurrentContrast",
+                choices=cn,
+                server=TRUE,
+                selected=cn[1]
+            )
+        }
     })
     
     observe({
@@ -1408,6 +1493,7 @@ diffExprTabPanelObserve <- function(input,output,session,
             shinyjs::disable("fdr")
             shinyjs::disable("fcNatural")
             shinyjs::disable("fcLog")
+            shinyjs::disable("rnaDeCurrentContrast")
             shinyjs::disable("rnaDeShowSpecificGenes")
             shinyjs::disable("rnaDeAnalyzedBiotypeFilter")
             shinyjs::disable("rnaDeValueCompRadio")
@@ -1422,6 +1508,7 @@ diffExprTabPanelObserve <- function(input,output,session,
             shinyjs::enable("fdr")
             shinyjs::enable("fcNatural")
             shinyjs::enable("fcLog")
+            shinyjs::enable("rnaDeCurrentContrast")
             shinyjs::enable("rnaDeShowSpecificGenes")
             shinyjs::enable("rnaDeAnalyzedBiotypeFilter")
             shinyjs::enable("rnaDeValueCompRadio")
@@ -1441,15 +1528,24 @@ diffExprTabPanelObserve <- function(input,output,session,
         handleRnaDeAnalysisAnnotationDownload()
         handleRnaDeAnalysisFlagsDownload()
         handleRnaDeAnalysisAllDownload()
+    })
+    
+    observe({
         statSliderUpdate()
         valueScaleUpdate()
         foldChangeSliderUpdate()
         filterByGeneUpdate()
         filterByChromosomeUpdate()
         filterByBiotypeUpdate()
+    })
+    
+    observe({
         updateMaPlot()
         updateMaPlotColours()
         updateMaZoomCoords()
+    })
+    
+    observe({
         resetMaZoom()
     })
     

@@ -82,11 +82,11 @@ shinyUI(fluidPage(
             tabPanel("Correlation analysis",
                 correlationTabPanel()
             ),
-            tabPanel("Pathway analysis",
-                pathwayTabPanel()
+            tabPanel("Clustering analysis",
+                clusteringTabPanel()
             ),
-            tabPanel("GO analysis",
-                goTabPanel()
+            tabPanel("GO/Pathway analysis",
+                goPathwayTabPanel()
             )
         ),
         tabPanel("Genome browser",

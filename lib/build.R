@@ -299,19 +299,18 @@ bam2count <- function(targets,annotation,rc=NULL) {
                     message("Caught error while reading BAM file: ",
                     sample.files[n])
                     message("====================")
-                    print(e)
+                    #print(e)
                     message("====================")
-                    return("Error")
+                    return(NULL)
                 },finally=""
             )
-            print(counts)
-            if (counts!="Error")
+            if (!is.null(counts))
                 counts <- assays(counts)$counts
         }
         else {
             warning(paste("No reads left after annotation chromosome ",
                 "presence check for sample ",n,sep=""))
-            counts <- "Error"
+            counts <- NULL
         }
         gc(verbose=FALSE)
         return(list(counts=counts,libsize=libsize))
@@ -319,7 +318,7 @@ bam2count <- function(targets,annotation,rc=NULL) {
     
     failed <- numeric(0)
     for (i in 1:length(ret.val)) {
-        if (ret.val[[i]]$counts!="Error") {
+        if (!is.null(ret.val[[i]]$counts)) {
             counts[,i] <- ret.val[[i]]$counts
             libsize[[i]] <- ret.val[[i]]$libsize
         }
