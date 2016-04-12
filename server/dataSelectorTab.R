@@ -84,6 +84,7 @@ dataSelectorTabPanelEventReactive <- function(input,output,session,
     
     clearDataset <- eventReactive(input$clearDataset,{
         currentMetadata$final <- NULL
+        allReactiveVars <- clearReactiveVars(allReactiveVars)
         dataSelectorMessages <- updateMessages(
             dataSelectorMessages,
             type="WARNING",
