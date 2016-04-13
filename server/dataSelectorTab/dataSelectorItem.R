@@ -5,6 +5,12 @@ dataSelectorTabPanelEventReactive <- function(input,output,session,
     
     updateCurrentSource <- eventReactive(input$dataSource,{
         currentMetadata$source <- input$dataSource
+        allReactiveVars <- clearReactiveVars(allReactiveVars)
+    })
+    
+    updateCurrentDataset <- eventReactive(input$dataSource,{
+        currentMetadata$dataset <- input$dataDataset
+        allReactiveVars <- clearReactiveVars(allReactiveVars)
     })
     
     updateCurrentMetadata <- eventReactive(input$dataDataset,{
@@ -138,6 +144,7 @@ dataSelectorTabPanelEventReactive <- function(input,output,session,
 
     return(list(
         updateCurrentSource=updateCurrentSource,
+        updateCurrentDataset=updateCurrentDataset,
         updateCurrentMetadata=updateCurrentMetadata,
         createDataset=createDataset,
         clearDataset=clearDataset,
@@ -400,6 +407,8 @@ dataSelectorTabPanelObserve <- function(input,output,session,
        
     updateCurrentSource <- 
         dataSelectorTabPanelReactiveEvents$updateCurrentSource
+    updateCurrentDataset <- 
+        dataSelectorTabPanelReactiveEvents$updateCurrentDataset
     updateCurrentMetadata <- 
         dataSelectorTabPanelReactiveEvents$updateCurrentMetadata
     createDataset <- dataSelectorTabPanelReactiveEvents$createDataset

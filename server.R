@@ -6,11 +6,16 @@ source("config/init.R")
 shinyServer(
     function(input,output,session) {
         source("server/reactiveVars.R",local=TRUE)
-        source("server/dataSelectorTab.R",local=TRUE)
-        source("server/signalViewerTab.R",local=TRUE)
-        source("server/expressionViewerTab.R",local=TRUE)
-        source("server/analysisTab.R",local=TRUE)
-        source("server/genomeBrowserTab.R",local=TRUE)
+        source("server/dataSelectorTab/dataSelectorItem.R",local=TRUE)
+        source("server/signalViewerTab/signalViewerItemGeneSignal.R",local=TRUE)
+        source("server/signalViewerTab/signalViewerItemAreaSignal.R",local=TRUE)
+        source("server/expressionViewerTab/expressionViewerItemKnownGene.R",
+            local=TRUE)
+        source("server/expressionViewerTab/expressionViewerItemCalculator.R",
+            local=TRUE)
+        source("server/analysisTab/analysisItemDiffExpr.R",local=TRUE)
+        source("server/analysisTab/analysisItemClustering.R",local=TRUE)
+        source("server/genomeBrowserTab/genomeBrowserItem.R",local=TRUE)
         
         # Make %#^%$^%$@( globals visible AND changeable
         makeReactiveBinding("loadedGenomes")
@@ -43,6 +48,10 @@ shinyServer(
         
         # Analysis - Differential expression
         diffExprTabPanelObserve(input,output,session,allReactiveVars,
+            allReactiveMsgs)
+        
+        # Analysis - Clustering
+        clusteringTabPanelObserve(input,output,session,allReactiveVars,
             allReactiveMsgs)
         
         # Genome browser

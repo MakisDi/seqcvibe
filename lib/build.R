@@ -656,6 +656,18 @@ buildLibsizeFile <- function(rdas,lsFile) {
     save(library_sizes,file=lsFile)
 }
 
+## Build track list example
+#config <- read.delim("/media/raid/software/bigseqcvis/config/metadata.txt")
+#annoPath <- "/media/raid/tracks/hybridsuite/reference"
+#appBase <- "/media/raid/software/bigseqcvis"
+#urlBase <- "http://epigenomics.fleming.gr/tracks"
+#buildTrackList(
+#    config=config,
+#    annoPath=annoPath,
+#    urlBase=urlBase,
+#    appBase=appBase
+#)
+
 #chr11:2,218,988-2,299,254
 #
 #refArea <- GRanges(
@@ -683,21 +695,3 @@ buildLibsizeFile <- function(rdas,lsFile) {
 #2219236
 #2232100
 
-#for (s in sources) {
-#   if (!dir.exists(file.path(appBase,"tracks",org,s)))
-#       dir.create(file.path(appBase,"tracks",org,s),recursive=TRUE)
-#   id <- which(as.character(config$source)==s)
-#   datasets <- unique(as.character(config$datasets[id]))
-#   for (d in datasets) {
-#       if (!dir.exists(file.path(appBase,"tracks",org,s,d)))
-#           dir.create(file.path(appBase,"tracks",org,s,d),recursive=TRUE)
-#       ic <- which(as.character(config$source)==s 
-#           && as.character(config$dataset)==d)
-#       classes <- unique(as.character(config$class[ic]))
-#       for (c in classes) {
-#           if (!dir.exists(file.path(appBase,"tracks",org,s,d,c)))
-#               dir.create(file.path(appBase,"tracks",org,s,d,c),
-#                   recursive=TRUE)
-#       }
-#   }
-#}

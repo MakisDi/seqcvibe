@@ -26,7 +26,6 @@ genomeBrowserTabPanelRenderUI <- function(output,session,allReactiveVars,
 
 }
 
-
 genomeBrowserTabPanelObserve <- function(input,output,session,allReactiveVars,
     allReactiveMsgs) {
     currentMetadata <- allReactiveVars$currentMetadata

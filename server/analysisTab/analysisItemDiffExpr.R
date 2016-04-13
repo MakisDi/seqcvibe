@@ -1232,12 +1232,20 @@ diffExprTabPanelRenderUI <- function(output,session,allReactiveVars,
     })
     
     output$setDeChrs <- renderUI({
-        disabled(selectizeInput(
-            inputId="customDeChr",
-            label="Show selected chromosomes",
-            multiple=TRUE,
-            choices=getValidChromosomes("hg19")
-        ))
+        if (is.null(currentMetadata$final))
+            disabled(selectizeInput(
+                inputId="customDeChr",
+                label="Show selected chromosomes",
+                multiple=TRUE,
+                choices=NULL
+            ))
+        else
+            disabled(selectizeInput(
+                inputId="customDeChr",
+                label="Show selected chromosomes",
+                multiple=TRUE,
+                choices=getValidChromosomes("hg19")
+            ))
     })
     
     output$checkboxBiotypeListAnalyzedRna <- renderUI({
@@ -1416,33 +1424,47 @@ diffExprTabPanelObserve <- function(input,output,session,
     })
     
     observe({
-        geneNames <- loadedGenomes[[currentMetadata$genome]]$geneNames
-        g <- isolate({input$rnaDeKnownFilter})
-        i <- grep(paste0("^",g),geneNames,perl=TRUE)
-        if (length(i)>0) {
+        if (is.null(currentMetadata$final))
             updateSelectizeInput(session,"rnaDeKnownFilter",
-                choices=geneNames[i],
-                selected=g,
+                choices=NULL,
                 server=TRUE
             )
+        else {
+            geneNames <- loadedGenomes[[currentMetadata$genome]]$geneNames
+            g <- isolate({input$rnaDeKnownFilter})
+            i <- grep(paste0("^",g),geneNames,perl=TRUE)
+            if (length(i)>0) {
+                updateSelectizeInput(session,"rnaDeKnownFilter",
+                    choices=geneNames[i],
+                    selected=g,
+                    server=TRUE
+                )
+            }
         }
     })
     
     observe({
-        geneNames <- loadedGenomes[[currentMetadata$genome]]$geneNames
-        if (input$includeCustomRegions) {
-            ts <- as.character(customRnaRegions$name)
-            names(ts) <- ts
-            geneNames <- c(geneNames,ts)
-        }
-        g <- isolate({input$rnaDeKnownFilter})
-        i <- grep(paste0("^",g),geneNames,perl=TRUE)
-        if (length(i)>0) {
+        if (is.null(currentMetadata$final))
             updateSelectizeInput(session,"rnaDeShowSpecificGenes",
-                choices=geneNames[i],
-                selected=g,
+                choices=NULL,
                 server=TRUE
             )
+        else {
+            geneNames <- loadedGenomes[[currentMetadata$genome]]$geneNames
+            if (input$includeCustomRegions) {
+                ts <- as.character(customRnaRegions$name)
+                names(ts) <- ts
+                geneNames <- c(geneNames,ts)
+            }
+            g <- isolate({input$rnaDeKnownFilter})
+            i <- grep(paste0("^",g),geneNames,perl=TRUE)
+            if (length(i)>0) {
+                updateSelectizeInput(session,"rnaDeShowSpecificGenes",
+                    choices=geneNames[i],
+                    selected=g,
+                    server=TRUE
+                )
+            }
         }
     })
     
@@ -1564,6 +1586,4 @@ diffExprTabPanelObserve <- function(input,output,session,
         })
     })
 }
-
-################################################################################
 
