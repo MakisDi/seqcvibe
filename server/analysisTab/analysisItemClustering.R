@@ -13,6 +13,8 @@ clusteringTabPanelRenderUI <- function(output,session,allReactiveVars,
 
 clusteringTabPanelObserve <- function(input,output,session,
     allReactiveVars,allReactiveMsgs) {
+    currentMetadata <- allReactiveVars$currentMetadata
+    
     clusteringTabPanelReactiveEvents <- 
         clusteringTabPanelEventReactive(input,output,session,
             allReactiveVars,allReactiveMsgs)
@@ -23,5 +25,25 @@ clusteringTabPanelObserve <- function(input,output,session,
             
     clusteringTabPanelRenderUI(output,session,allReactiveVars,
         allReactiveMsgs)
+        
+    observe({
+        if (is.null(currentMetadata$final))
+            updateSelectizeInput(session,"selectClusteringGeneName",
+                choices=NULL,
+                server=TRUE
+            )
+        else {
+            geneNames <- loadedGenomes[[currentMetadata$genome]]$geneNames
+            g <- isolate({input$selectClusteringGeneName})
+            i <- grep(paste0("^",g),geneNames,perl=TRUE)
+            if (length(i)>0) {
+                updateSelectizeInput(session,"selectClusteringGeneName",
+                    choices=geneNames[i],
+                    selected=g,
+                    server=TRUE
+                )
+            }
+        }
+    })
 }
 

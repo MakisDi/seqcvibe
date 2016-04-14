@@ -129,6 +129,65 @@ makeStat <- function(samples,data.mat,stat,value) {
     }
 }
 
+distFuns <- function() {
+    return(list(
+        euclidean=function(x) {
+            dist(x,method="euclidean")
+        },
+        maximum=function(x) {
+            dist(x,method="maximum")
+        },
+        manhattan=function(x) {
+            dist(x,method="manhattan")
+        },
+        canberra=function(x) {
+            dist(x,method="canberra")
+        },
+        minkowski=function(x) {
+            dist(x,method="minkowski")
+        },
+        pearson=function(x) {
+            as.dist(1-cor(t(x),method="pearson"))
+        },
+        spearman=function(x) {
+            as.dist(1-cor(t(x),method="spearman"))
+        },
+        cosine=function(x) {
+            require(lsa)
+            as.dist(cosine(x))
+        }
+    ))
+}
+
+hclustFuns <- function() {
+    return(list(
+        average=function(x) {
+            dist(x,method="average")
+        },
+        complete=function(x) {
+            hclust(x,method="complete")
+        },
+        single=function(x) {
+            dist(x,method="single")
+        },
+        mcquitty=function(x) {
+            dist(x,method="mcquitty")
+        },
+        median=function(x) {
+            dist(x,method="median")
+        },
+        centroid=function(x) {
+            dist(x,method="centroid")
+        },
+        ward1=function(x) {
+            as.dist(1-cor(t(x),method="ward.D"))
+        },
+        ward2=function(x) {
+            as.dist(1-cor(t(x),method="ward.D2"))
+        }
+    ))
+}
+
 updateMessages <- function(messageContainer,type,msg,clear=FALSE) {
     if (clear)
         messageContainer$messages <- list(

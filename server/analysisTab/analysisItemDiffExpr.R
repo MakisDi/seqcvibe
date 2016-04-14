@@ -1456,7 +1456,7 @@ diffExprTabPanelObserve <- function(input,output,session,
                 names(ts) <- ts
                 geneNames <- c(geneNames,ts)
             }
-            g <- isolate({input$rnaDeKnownFilter})
+            g <- isolate({input$rnaDeShowSpecificGenes})
             i <- grep(paste0("^",g),geneNames,perl=TRUE)
             if (length(i)>0) {
                 updateSelectizeInput(session,"rnaDeShowSpecificGenes",
