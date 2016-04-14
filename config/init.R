@@ -7,6 +7,7 @@ require(GenomicRanges)
 require(GenomicAlignments)
 require(rtracklayer)
 require(ggbio)
+require(d3heatmap)
 #require(plotly)
 
 # Load additional functions

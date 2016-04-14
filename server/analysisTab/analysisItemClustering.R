@@ -9,6 +9,19 @@ clusteringTabPanelReactive <- function(input,output,session,
 
 clusteringTabPanelRenderUI <- function(output,session,allReactiveVars,
     allReactiveMsgs) {
+	currentHeatmap <- allReactiveVars$currentHeatmap
+	currentRnaDeTable <- allReactiveVars$currentRnaDeTable
+		
+	output$heatmapOutput <- renderUI({
+		if (is.null(currentRnaDeTable$totalTable))
+			output$heatmap <- renderPlot({
+				currentHeatmap$heatmap
+			})
+		else
+			output$heatmap <- renderD3heatmap({
+				currentHeatmap$heatmap
+			})
+	})
 }
 
 clusteringTabPanelObserve <- function(input,output,session,

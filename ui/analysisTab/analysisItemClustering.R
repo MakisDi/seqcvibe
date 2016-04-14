@@ -44,7 +44,7 @@ clusteringTabPanel <- function() {
         ),
         wellPanel(
             fluidRow(column(12,
-                h4("Clustering settings"),
+                h4("Clustering and heatmap settings"),
                 selectizeInput(
                     inputId="selectClusteringDistance",
                     label="Select distance metric",
@@ -97,6 +97,33 @@ clusteringTabPanel <- function() {
                     value="1"
                 )
             )),
+            fluidRow(column(12,
+				colourInput(
+					inputId="heatmapColourExtremeDown",
+					label="Colour for extreme down-regulated",
+					value="#1A9641"
+				),
+				colourInput(
+					inputId="heatmapColourMildDown",
+					label="Colour for mild down-regulated",
+					value="#A6D96A"
+				),
+				colourInput(
+					inputId="heatmapColourMiddle",
+					label="Colour for neutral",
+					value="#FFFFBF"
+				),
+				colourInput(
+					inputId="heatmapColourMildUp",
+					label="Colour for mild up-regulated",
+					value="#FDAE61"
+				),
+				colourInput(
+					inputId="heatmapColourExtremeUp",
+					label="Colour for extreme up-regulated",
+					value="#D7191C"
+				)
+			)),
             fluidRow(br()),
             fluidRow(column(8,
                 htmlOutput("rnaClusteringSettingsError")
@@ -113,11 +140,9 @@ clusteringTabPanel <- function() {
             ))
         )
     ),column(9,
-        wellPanel(
-            fluidRow(column(12,
-                h4("Coming soon!")
-            ))
-        )
+		fluidRow(column(12,
+			htmlOutput("heatmapOutput")
+		))
     ))
 }
 
