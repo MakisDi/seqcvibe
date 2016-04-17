@@ -18,11 +18,11 @@ expressionExplorerTabPanel <- function() {
                             "input.rnaExpressionGeneList=='select'",
                         selectizeInput(
                             inputId="selectExpressionGeneName",
-                            label="",
+                            label="Select genes to display",
                             multiple=TRUE,
                             choices=NULL,
                             options=list(
-                                placeholder="Select genes",
+                                placeholder="Type some gene names",
                                 selectOnTab=TRUE
                             )
                         )

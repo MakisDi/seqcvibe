@@ -65,7 +65,7 @@ diffExprTabPanelEventReactive <- function(input,output,session,
         if (input$includeCustomRegions) {
             if (!is.null(currentCustomRnaTables$lengths)) {
                 A <- do.call("cbind",currentCustomRnaTables$tables)
-                A <- A[,colnames(M)]
+                A <- A[,colnames(M),drop=FALSE]
             }
         }
         M <- rbind(M,A)

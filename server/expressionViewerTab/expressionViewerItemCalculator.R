@@ -249,8 +249,8 @@ expressionCalculatorTabPanelReactive <- function(input,output,session,
                             "_rows_selected",sep="")]]
                         if (length(sel)>0)
                             write.table(currentCustomRnaTables$tables[[
-                                x]][sel,],file=con,sep="\t",quote=FALSE,
-                                col.names=NA)
+                                x]][sel,,drop=FALSE],file=con,sep="\t",
+                                quote=FALSE,col.names=NA)
                     }
                 )
             output[[paste("exportCustomRnaCountAll_",x,sep="")]] <- 
@@ -379,6 +379,8 @@ expressionCalculatorTabPanelRenderUI <- function(output,session,
                             average=average,
                             deviation=deviation
                         )
+                        currentCustomRnaTables$tables[[x]] <- 
+							cbind(meta,tab)
                     }
                     else 
                         meta <- NULL

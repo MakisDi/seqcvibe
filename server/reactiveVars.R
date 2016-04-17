@@ -184,7 +184,9 @@ initReactiveVars <- function() {
                 panel.grid.major=element_blank(),
                 panel.grid.minor=element_blank(),
                 plot.background=element_blank()
-            )
+            ),
+            data=NULL,
+			colors=NULL
     )
     
     currentMdsTables <- reactiveValues()
