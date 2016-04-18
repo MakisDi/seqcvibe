@@ -2,8 +2,8 @@ correlationTabPanelEventReactive <- function(input,output,session,
     allReactiveVars,allReactiveMsgs) {
     currentMetadata <- allReactiveVars$currentMetadata
     currentCustomRnaTables <- allReactiveVars$currentCustomRnaTables
-    currentRnaDeTable <- allReactiveVars$currentRnaDeTable
-    currentHeatmap <- allReactiveVars$currentHeatmap
+    #currentRnaDeTable <- allReactiveVars$currentRnaDeTable
+    currentCorrelation <- allReactiveVars$currentCorrelation
         
     performRnaCorrelation <- eventReactive(input$performRnaCorrelation,{
         s <- currentMetadata$source
@@ -73,7 +73,6 @@ correlationTabPanelEventReactive <- function(input,output,session,
                 }
             }
         )
-        
         # We now have the tab, transformations based on other selections
         switch(input$rnaCorrelationScaleRadio,
             natural = {
@@ -83,6 +82,57 @@ correlationTabPanelEventReactive <- function(input,output,session,
                 tab <- round(log2(tab+1),digits=6)
             }
         )
+        if (!is.null(currentMetadata$final$alt_id))
+			colnames(tab) <- as.character(currentMetadata$final$alt_id)
+        
+        switch(input$rnaCorrelateWhat,
+			samples = {
+				currentCorrelation$corMatrix <- cor(tab,
+					method=input$rnaCorrelationMethod)
+			},
+			allgenes = {
+				currentCorrelation$corMatrix <- cor(t(tab),
+					method=input$rnaCorrelationMethod)
+			},
+			refgene = {
+			}
+		)
+        
+        currentCorrelation$opts$method <- input$rnaCorrelationMethod
+        currentCorrelation$opts$colors <- c(
+			input$corrColourHigh,
+			input$corrColourNo,
+			input$corrColourLow
+        )
+        
+        
+        
+        #n <- dim(cor.mat)[1]
+        #labs <- matrix(NA,n,n)
+        #for (i in 1:n)
+        #    for (j in 1:n)
+        #        labs[i,j] <- sprintf("%.2f",cor.mat[i,j])
+        #if (n <= 5)
+        #    notecex <- 1.2
+        #else if (n > 5 & n < 10)
+        #    notecex <- 0.9
+        #else
+        #    notecex <- 0.7
+        #heatmap.2(
+		#	cor.mat,
+		#	col=colorRampPalette(c("yellow","grey","blue")),
+        #    revC=TRUE,
+        #    trace="none",
+        #    symm=TRUE,
+        #    Colv=TRUE,
+        #    cellnote=labs,
+        #    keysize=1,
+        #    density.info="density",
+        #    notecex=notecex,
+        #    cexCol=0.9,
+        #    cexRow=0.9,
+        #    font.lab=2
+        #)
         
     })
     
@@ -101,13 +151,35 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
     currentCorrelation <- allReactiveVars$currentCorrelation
     
     output$correlationOutput <- renderUI({
-        if (is.null(currentCorrelation$data)) {
+        if (is.null(currentCorrelation$corMatrix)) {
             output$correlation <- renderPlot({
                 currentCorrelation$entry
             })
             plotOutput("correlation",height="640px")
         }
         else {
+			n <- dim(currentCorrelation$corMatrix)[1]
+			labs <- matrix(NA,n,n)
+			for (i in 1:n)
+				for (j in 1:n)
+					labs[i,j] <- sprintf("%.2f",
+						currentCorrelation$corMatrix[i,j])
+			output$heatmap <- renderD3heatmap({
+				d3heatmap(
+					currentCorrelation$corMatrix,
+					dendrogram="both",
+					Rowv=TRUE,
+					Colv=TRUE,
+					colors=colorRampPalette(currentCorrelation$opts$colors),
+					revC=TRUE,
+					cellnote=labs,
+					symm=TRUE
+				)
+			})
+			div(
+				class="heatmap-container",
+				d3heatmapOutput("heatmap",height="800px")
+			)
         }
     })
     
@@ -139,8 +211,8 @@ correlationTabPanelObserve <- function(input,output,session,
         correlationTabPanelEventReactive(input,output,session,
             allReactiveVars,allReactiveMsgs)
     
-    performRnaClustering <- 
-        correlationTabPanelReactiveEvents$performRnaClustering
+    performRnaCorrelation <- 
+        correlationTabPanelReactiveEvents$performRnaCorrelation
     
     correlationTabPanelReactiveExprs <- 
         correlationTabPanelReactive(input,output,session,
@@ -157,7 +229,7 @@ correlationTabPanelObserve <- function(input,output,session,
             )
         else {
             geneNames <- loadedGenomes[[currentMetadata$genome]]$geneNames
-            g <- isolate({input$selectClusteringGeneName})
+            g <- isolate({input$selectCorrelationGeneName})
             i <- grep(paste0("^",g),geneNames,perl=TRUE)
             if (length(i)>0) {
                 updateSelectizeInput(session,"selectCorrelationGeneName",
@@ -177,7 +249,7 @@ correlationTabPanelObserve <- function(input,output,session,
             )
         else {
             geneNames <- loadedGenomes[[currentMetadata$genome]]$geneNames
-            g <- isolate({input$selectClusteringGeneName})
+            g <- isolate({input$selectCorrelationGeneName})
             i <- grep(paste0("^",g),geneNames,perl=TRUE)
             if (length(i)>0) {
                 updateSelectizeInput(session,"rnaCorrelationRefGene",
@@ -187,6 +259,18 @@ correlationTabPanelObserve <- function(input,output,session,
                 )
             }
         }
+    })
+    
+    observe({
+        tryCatch({
+            shinyjs::disable("performRnaCorrelation")
+            performRnaCorrelation()
+        },error=function(e) {
+            print(e)
+        },
+        finally={
+			shinyjs::enable("performRnaCorrelation")
+		})
     })
 }
 

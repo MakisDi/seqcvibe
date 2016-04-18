@@ -93,8 +93,36 @@ correlationTabPanel <- function() {
                                 )
                             )
                         )
+                    )),
+                    fluidRow(column(12,
+						selectizeInput(
+							inputId="rnaCorrelationMethod",
+							label="Select correlation method",
+							multiple=FALSE,
+							choices=c(
+								Pearson="pearson",
+								Spearman="spearman"
+							)
+						)
+					)),
+					fluidRow(column(12,
+                        colourInput(
+                            inputId="corrColourHigh",
+                            label="Colour for high correlation",
+                            value="#0000FF"
+                        ),
+                        colourInput(
+                            inputId="corrColourNo",
+                            label="Colour for no correlation",
+                            value="#BEBEBE"
+                        ),
+                        colourInput(
+                            inputId="corrColourLow",
+                            label="Colour for low correlation",
+                            value="#FFFF00"
+                        )
                     ))
-                )            
+                )       
             ),
             fluidRow(br()),
             fluidRow(column(8,
