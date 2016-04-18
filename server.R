@@ -15,6 +15,7 @@ shinyServer(
             local=TRUE)
         source("server/analysisTab/analysisItemDiffExpr.R",local=TRUE)
         source("server/analysisTab/analysisItemClustering.R",local=TRUE)
+        source("server/analysisTab/analysisItemCorrelation.R",local=TRUE)
         source("server/genomeBrowserTab/genomeBrowserItem.R",local=TRUE)
         
         # Make %#^%$^%$@( globals visible AND changeable
@@ -52,6 +53,10 @@ shinyServer(
         
         # Analysis - Clustering
         clusteringTabPanelObserve(input,output,session,allReactiveVars,
+            allReactiveMsgs)
+            
+        # Analysis - Correlation
+        correlationTabPanelObserve(input,output,session,allReactiveVars,
             allReactiveMsgs)
         
         # Genome browser

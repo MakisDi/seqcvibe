@@ -50,7 +50,7 @@ expressionExplorerTabPanelReactive <- function(input,output,session,
                             "_rows_selected",sep="")]]
                         if (length(sel)>0)
                             write.table(currentTables[[x]][sel,,drop=FALSE],
-								file=con,sep="\t",quote=FALSE,col.names=NA)
+                                file=con,sep="\t",quote=FALSE,col.names=NA)
                     }
                 )
             output[[paste("exportCountAll_",x,sep="")]] <- downloadHandler(

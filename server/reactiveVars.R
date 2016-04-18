@@ -106,6 +106,7 @@ initReactiveVars <- function() {
     
     currentCustomRnaTables <- reactiveValues(
         tables=list(),
+        displayTables=list(),
         lengths=NULL
     )
     
@@ -167,7 +168,7 @@ initReactiveVars <- function() {
     )
     
     currentHeatmap <- reactiveValues(
-		heatmap=ggplot(data=data.frame(x=1:100,y=1:100)) + 
+        entry=ggplot(data=data.frame(x=1:100,y=1:100)) + 
             geom_text(data=data.frame(x=50,y=50,
                 label="Resulting heatmap will\nbe displayed here"),
                 aes(x=x,y=y,label=label),size=10) +
@@ -185,8 +186,81 @@ initReactiveVars <- function() {
                 panel.grid.minor=element_blank(),
                 plot.background=element_blank()
             ),
-            data=NULL,
-			colors=NULL
+        timeout=ggplot(data=data.frame(x=1:100,y=1:100)) + 
+            geom_text(data=data.frame(x=50,y=50,
+                label=paste("Clustering operation took too long\nto complete",
+                    " andwas aborted.\nConsider lowering the number of genes",
+                    "\nand/or conditions to prevent this.",sep="")),
+                aes(x=x,y=y,label=label),size=9) +
+            theme(
+                axis.line=element_blank(),
+                axis.text.x=element_blank(),
+                axis.text.y=element_blank(),
+                axis.ticks=element_blank(),
+                axis.title.x=element_blank(),
+                axis.title.y=element_blank(),
+                legend.position="none",
+                panel.background=element_blank(),
+                panel.border=element_blank(),
+                panel.grid.major=element_blank(),
+                panel.grid.minor=element_blank(),
+                plot.background=element_blank()
+            ),
+        error=ggplot(data=data.frame(x=1:100,y=1:100)) + 
+            geom_text(data=data.frame(x=50,y=50,
+                label=paste("Clustering operation resulted in an error\nmost ",
+                    "probably because of memory reasons.\nConsider lowering ",
+                    "the number of genes\nand/or conditions to prevent this.",
+                    sep="")),
+                aes(x=x,y=y,label=label),size=9,color="red2") +
+            theme(
+                axis.line=element_blank(),
+                axis.text.x=element_blank(),
+                axis.text.y=element_blank(),
+                axis.ticks=element_blank(),
+                axis.title.x=element_blank(),
+                axis.title.y=element_blank(),
+                legend.position="none",
+                panel.background=element_blank(),
+                panel.border=element_blank(),
+                panel.grid.major=element_blank(),
+                panel.grid.minor=element_blank(),
+                plot.background=element_blank()
+            ),
+        data=NULL,
+        opts=list(
+            dendrogram="both",
+            distfun="dist",
+            hclustfun="hclust",
+            Rowv=TRUE,
+            Colv=TRUE,
+            k_row=1,
+            k_col=1,
+            colors="RdYlBu"
+        )
+    )
+    
+    currentCorrelation <- reactiveValues(
+        entry=ggplot(data=data.frame(x=1:100,y=1:100)) + 
+            geom_text(data=data.frame(x=50,y=50,
+                label="Resulting figures will\nbe displayed here"),
+                aes(x=x,y=y,label=label),size=10) +
+            theme(
+                axis.line=element_blank(),
+                axis.text.x=element_blank(),
+                axis.text.y=element_blank(),
+                axis.ticks=element_blank(),
+                axis.title.x=element_blank(),
+                axis.title.y=element_blank(),
+                legend.position="none",
+                panel.background=element_blank(),
+                panel.border=element_blank(),
+                panel.grid.major=element_blank(),
+                panel.grid.minor=element_blank(),
+                plot.background=element_blank()
+            ),
+        data=NULL,
+        opts=NULL
     )
     
     currentMdsTables <- reactiveValues()
@@ -207,7 +281,8 @@ initReactiveVars <- function() {
         currentPipelineOutput=currentPipelineOutput,
         currentRnaDeTable=currentRnaDeTable,
         currentMdsTables=currentMdsTables,
-        currentHeatmap=currentHeatmap
+        currentHeatmap=currentHeatmap,
+        currentCorrelation=currentCorrelation
     ))
 }
 
@@ -382,6 +457,18 @@ clearReactiveVars <- function(allReactiveVars) {
         bt=NULL,
         genes=NULL,
         chr=NULL
+    )
+    
+    allReactiveVars$currentHeatmap$data <- NULL
+    allReactiveVars$currentHeatmap$opts <- list(
+        dendrogram="both",
+        distfun="dist",
+        hclustfun="hclust",
+        Rowv=TRUE,
+        Colv=TRUE,
+        k_row=1,
+        k_col=1,
+        colors="RdYlBu"
     )
         
     allReactiveVars$currentMdsTables <- reactiveValues()

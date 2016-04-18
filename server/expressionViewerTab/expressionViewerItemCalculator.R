@@ -248,7 +248,7 @@ expressionCalculatorTabPanelReactive <- function(input,output,session,
                         sel <- input[[paste("customCountRnaTable_",x,
                             "_rows_selected",sep="")]]
                         if (length(sel)>0)
-                            write.table(currentCustomRnaTables$tables[[
+                            write.table(currentCustomRnaTables$displayTables[[
                                 x]][sel,,drop=FALSE],file=con,sep="\t",
                                 quote=FALSE,col.names=NA)
                     }
@@ -260,7 +260,7 @@ expressionCalculatorTabPanelReactive <- function(input,output,session,
                         paste(x,"_custom_expression_",tt,".txt", sep='')
                     },
                     content=function(con) {
-                        write.table(currentCustomRnaTables$tables[[x]],
+                        write.table(currentCustomRnaTables$displayTables[[x]],
                             file=con,sep="\t",quote=FALSE,col.names=NA)
                     }
                 )
@@ -322,7 +322,7 @@ expressionCalculatorTabPanelRenderUI <- function(output,session,
                     meta <- NULL
                 }
                 else {
-                    tab <- as.matrix(tab)
+                    #tab <- as.matrix(tab)
                     switch(input$rnaCustomMeasureRadio,
                         raw = {
                             average <- round(apply(tab,1,
@@ -330,12 +330,6 @@ expressionCalculatorTabPanelRenderUI <- function(output,session,
                             deviation <- round(apply(tab,1,
                                 input$rnaCustomDeviationRadio))
                         },
-                        #norm = {
-                        #   average <- round(apply(tab,1,
-                        #       input$rnaCustomAverageRadio))
-                        #   deviation <- round(apply(tab,1,
-                        #       input$rnaCustomDeviationRadio))
-                        #},
                         rpkm = {
                             tab <- round(edgeR::rpkm(tab,gene.length=le,
                                 lib.size=unlist(D$libsize[colnames(tab)]),),
@@ -354,36 +348,31 @@ expressionCalculatorTabPanelRenderUI <- function(output,session,
                                 input$rnaCustomDeviationRadio),digits=6)
                         }
                     )
-                    if (!isEmpty(tab)) {
-                        switch(input$rnaCustomScaleRadio,
-                            natural = {
-                                tab <- tab
-                                average <- average
-                                deviation <- deviation
-                            },
-                            log2 = {
-                                tab <- round(log2(tab+1),digits=6)
-                                average <- round(apply(tab,1,
-                                    input$rnaCustomAverageRadio),digits=6)
-                                deviation <- round(apply(tab,1,
-                                    input$rnaCustomDeviationRadio),digits=6)
-                            }
-                        )
-                        # Use alternative ids if present
-                        if (!is.null(M$alt_id))
-                            colnames(tab) <- as.character(M[which(
-                                as.character(M$class)==x),"alt_id"])
-                        # Attach some annotation
-                        meta <- data.frame(
-                            name=rownames(tab),
-                            average=average,
-                            deviation=deviation
-                        )
-                        currentCustomRnaTables$tables[[x]] <- 
-							cbind(meta,tab)
-                    }
-                    else 
-                        meta <- NULL
+                    switch(input$rnaCustomScaleRadio,
+                        natural = {
+                            tab <- tab
+                            average <- average
+                            deviation <- deviation
+                        },
+                        log2 = {
+                            tab <- round(log2(tab+1),digits=6)
+                            average <- round(apply(tab,1,
+                                input$rnaCustomAverageRadio),digits=6)
+                            deviation <- round(apply(tab,1,
+                                input$rnaCustomDeviationRadio),digits=6)
+                        }
+                    )
+                    # Use alternative ids if present
+                    if (!is.null(M$alt_id))
+                        colnames(tab) <- as.character(M[which(
+                            as.character(M$class)==x),"alt_id"])
+                    # Attach some annotation
+                    meta <- data.frame(
+                        name=rownames(tab),
+                        average=average,
+                        deviation=deviation
+                    )
+                    currentCustomRnaTables$displayTables[[x]] <- cbind(meta,tab)
                 }
                 output[[paste("customCountRnaTable",x,sep="_")]] <- 
                     DT::renderDataTable(

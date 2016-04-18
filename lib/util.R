@@ -140,9 +140,9 @@ distFuns <- function() {
         manhattan=function(x) {
             dist(x,method="manhattan")
         },
-        canberra=function(x) {
-            dist(x,method="canberra")
-        },
+        #canberra=function(x) {
+        #    dist(x,method="canberra")
+        #},
         minkowski=function(x) {
             dist(x,method="minkowski")
         },
@@ -154,7 +154,7 @@ distFuns <- function() {
         },
         cosine=function(x) {
             require(lsa)
-            as.dist(cosine(x))
+            as.dist(cosine(t(x)))
         }
     ))
 }
@@ -162,28 +162,28 @@ distFuns <- function() {
 hclustFuns <- function() {
     return(list(
         average=function(x) {
-            dist(x,method="average")
+            hclust(x,method="average")
         },
         complete=function(x) {
             hclust(x,method="complete")
         },
         single=function(x) {
-            dist(x,method="single")
+            hclust(x,method="single")
         },
         mcquitty=function(x) {
-            dist(x,method="mcquitty")
+            hclust(x,method="mcquitty")
         },
         median=function(x) {
-            dist(x,method="median")
+            hclust(x,method="median")
         },
         centroid=function(x) {
-            dist(x,method="centroid")
+            hclust(x,method="centroid")
         },
         ward1=function(x) {
-            as.dist(1-cor(t(x),method="ward.D"))
+            hclust(x,method="ward.D")
         },
         ward2=function(x) {
-            as.dist(1-cor(t(x),method="ward.D2"))
+            hclust(x,method="ward.D2")
         }
     ))
 }
