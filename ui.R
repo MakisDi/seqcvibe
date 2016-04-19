@@ -24,7 +24,7 @@ shinyUI(fluidPage(
         tags$link(
             rel="stylesheet",
             type="text/css",
-            href="bigseqcvis.css"
+            href="seqcvibe.css"
         ),
         tags$link(
             rel="stylesheet",
@@ -59,7 +59,7 @@ shinyUI(fluidPage(
         ))
     ),
     navbarPage(
-        title="BigSeqCVis (beta)",
+        title="SeqCVIBE (beta)",
         tabPanel("Data selector",
             dataSelectorTabPanel()
         ),
@@ -83,14 +83,14 @@ shinyUI(fluidPage(
             tabPanel("Differential expression",
                 differentialExpressionTabPanel()
             ),
-            tabPanel("MDS/PCA analysis",
-                mdsPcaTabPanel()
+            tabPanel("Clustering analysis",
+                clusteringTabPanel()
             ),
             tabPanel("Correlation analysis",
                 correlationTabPanel()
             ),
-            tabPanel("Clustering analysis",
-                clusteringTabPanel()
+            tabPanel("MDS/PCA analysis",
+                mdsPcaTabPanel()
             ),
             tabPanel("GO/Pathway analysis",
                 goPathwayTabPanel()

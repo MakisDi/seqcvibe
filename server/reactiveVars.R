@@ -259,10 +259,34 @@ initReactiveVars <- function() {
                 panel.grid.minor=element_blank(),
                 plot.background=element_blank()
             ),
+        error=ggplot(data=data.frame(x=1:100,y=1:100)) + 
+            geom_text(data=data.frame(x=50,y=50,
+                label=paste("Correlation analysis has failed.\nThe most ",
+                    "probable reason is that the\nselected gene set does not ",
+                    "show\nenough variability to produce a\ncorrelation ",
+                    "matrix. Select another gene\nset and try again.",sep="")),
+                aes(x=x,y=y,label=label),size=9,color="red2") +
+            theme(
+                axis.line=element_blank(),
+                axis.text.x=element_blank(),
+                axis.text.y=element_blank(),
+                axis.ticks=element_blank(),
+                axis.title.x=element_blank(),
+                axis.title.y=element_blank(),
+                legend.position="none",
+                panel.background=element_blank(),
+                panel.border=element_blank(),
+                panel.grid.major=element_blank(),
+                panel.grid.minor=element_blank(),
+                plot.background=element_blank()
+            ),
         corMatrix=NULL,
+        datMatrix=NULL,
+        what="samples",
         opts=list(
-			method="pearson",
-			colors=c("#0000FF","#BEBEBE","FFFF00")
+            method="pearson",
+            symm=FALSE,
+            colors=c("#FFFF00","#BEBEBE","#0000FF")
         )
     )
     
@@ -472,6 +496,15 @@ clearReactiveVars <- function(allReactiveVars) {
         k_row=1,
         k_col=1,
         colors="RdYlBu"
+    )
+        
+    allReactiveVars$currentCorrelation$corMatrix <- NULL
+    allReactiveVars$currentCorrelation$datMatrix <- NULL
+    allReactiveVars$currentCorrelation$what <- "samples"
+    allReactiveVars$currentCorrelation$opts <- list(
+        method="pearson",
+        symm=FALSE,
+        colors=c("#FFFF00","#BEBEBE","#0000FF")
     )
         
     allReactiveVars$currentMdsTables <- reactiveValues()
