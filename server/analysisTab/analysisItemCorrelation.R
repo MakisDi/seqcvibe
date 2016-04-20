@@ -6,6 +6,14 @@ correlationTabPanelEventReactive <- function(input,output,session,
     currentCorrelation <- allReactiveVars$currentCorrelation
         
     performRnaCorrelation <- eventReactive(input$performRnaCorrelation,{
+        if (is.null(currentMetadata$final)) {
+            output$rnaCorrelationSettingsError <- renderUI({
+                div(class="error-message",paste("You must create a ",
+                    "dataset first!",sep=""))
+            })
+            return()
+        }
+        output$rnaCorrelationSettingsError <- renderUI({div()})
         s <- currentMetadata$source
         d <- currentMetadata$dataset
         meta <- currentMetadata$final
@@ -109,34 +117,6 @@ correlationTabPanelEventReactive <- function(input,output,session,
             input$corrColourNo,
             input$corrColourHigh
         )
-        
-        #n <- dim(cor.mat)[1]
-        #labs <- matrix(NA,n,n)
-        #for (i in 1:n)
-        #    for (j in 1:n)
-        #        labs[i,j] <- sprintf("%.2f",cor.mat[i,j])
-        #if (n <= 5)
-        #    notecex <- 1.2
-        #else if (n > 5 & n < 10)
-        #    notecex <- 0.9
-        #else
-        #    notecex <- 0.7
-        #heatmap.2(
-        #   cor.mat,
-        #   col=colorRampPalette(c("yellow","grey","blue")),
-        #    revC=TRUE,
-        #    trace="none",
-        #    symm=TRUE,
-        #    Colv=TRUE,
-        #    cellnote=labs,
-        #    keysize=1,
-        #    density.info="density",
-        #    notecex=notecex,
-        #    cexCol=0.9,
-        #    cexRow=0.9,
-        #    font.lab=2
-        #)
-        
     })
     
     return(list(
@@ -156,16 +136,48 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
     output$correlationOutput <- renderUI({
         if (is.null(currentCorrelation$corMatrix)) {
             output$correlation <- renderPlot({
-                currentCorrelation$entry
+                currentCorrelation$entryCor
             })
             plotOutput("correlation",height="640px")
         }
         else {
             if (any(is.na(currentCorrelation$corMatrix))) {
                 output$correlation <- renderPlot({
-                    currentCorrelation$error
+                    currentCorrelation$errorCor
                 })
                 plotOutput("correlation",height="640px")
+            }
+            else if (all(dim(currentCorrelation$corMatrix)>100)) {
+                # Switch to static image
+                cc <- unique(as.character(currentMetadata$final$class))
+                classList <- vector("list",length(cc))
+                names(classList) <- cc
+                for (cl in cc)
+                    classList[[cl]] <- 
+                        as.character(
+                            currentMetadata$final$sample_id[which(
+                                currentMetadata$final$class==cl)])
+                names(classList) <- baseColours[1:length(classList)]
+                classes <- rep(names(classList),lengths(classList))
+                output$correlation <- renderPlot({
+                    heatmap.2(
+                        currentCorrelation$corMatrix,
+                        col=colorRampPalette(currentCorrelation$opts$colors),
+                        revC=TRUE,
+                        trace="none",
+                        symm=currentCorrelation$opts$symm,
+                        Colv=TRUE,
+                        key=FALSE,
+                        labRow="",
+                        labCol="",
+                        RowSideColors=classes,
+                        ColSideColors=classes
+                    )
+                })
+                div(
+                    class="heatmap-container",
+                    plotOutput("correlation",height="640px")
+                )
             }
             else {
                 if (currentCorrelation$what=="genes") {
@@ -175,7 +187,7 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
                 }
                 else
                     labrow <- labcol <- rownames(currentCorrelation$corMatrix)
-                output$heatmap <- renderD3heatmap({
+                output$correlation <- renderD3heatmap({
                     d3heatmap(
                         currentCorrelation$corMatrix,
                         dendrogram="both",
@@ -190,10 +202,84 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
                 })
                 div(
                     class="heatmap-container",
-                    d3heatmapOutput("heatmap",height="640px")
+                    d3heatmapOutput("correlation",height="640px")
                 )
             }
         }
+    })
+    
+    output$smallMds <- renderPlot({
+        if (is.null(currentCorrelation$datMatrix))
+            currentCorrelation$entryMds
+        else {
+            require(ggrepel)
+            cc <- unique(as.character(currentMetadata$final$class))
+            classList <- vector("list",length(cc))
+            names(classList) <- cc
+            for (cl in cc)
+                classList[[cl]] <- 
+                    as.character(
+                        currentMetadata$final$sample_id[which(
+                            currentMetadata$final$class==cl)])
+            classes <- as.factor(rep(names(classList),lengths(classList)))
+            x <- currentCorrelation$datMatrix
+            d <- as.dist(0.5*(1-cor(x,method=currentCorrelation$opts$method)))
+            tryCatch({
+                mds.obj <- cmdscale(d,eig=TRUE,k=2)
+                nd <- as.dist(0.5*(1-cor(t(mds.obj$points),
+                    method=currentCorrelation$opts$method)))
+                currentCorrelation$mdsRsq <- cor(c(d),c(nd))^2
+                gofx <- round(100*mds.obj$GOF[1],1)
+                gofy <- round(100*mds.obj$GOF[2],1)
+                for.ggplot <- data.frame(
+                    x=mds.obj$points[,1],
+                    y=mds.obj$points[,2],
+                    Condition=classes
+                )
+                if (nrow(for.ggplot)<=100)
+                    rownames(for.ggplot) <- rownames(mds.obj$points)
+                mds <- ggplot() +
+                    geom_point(data=for.ggplot,mapping=aes(x=x,y=y,
+                        colour=Condition,shape=Condition),size=2) +
+                    xlab(paste("\nPrincipal Coordinate 1 (",gofx,
+                        "% goodness of fit)",sep="")) +
+                    ylab(paste("Principal Coordinate 2 (",gofy,
+                        "% goodness of fit)\n",sep="")) +
+                    theme_bw() +
+                    theme(
+                        axis.title.x=element_text(size=11),
+                        axis.title.y=element_text(size=11),
+                        axis.text.x=element_text(size=9,face="bold"),
+                        axis.text.y=element_text(size=9,face="bold"),
+                        legend.position="bottom",
+                        legend.title=element_text(size=10,face="bold"),
+                        legend.text=element_text(size=9),
+                        legend.key=element_blank()
+                    )
+                if (nrow(for.ggplot)<=100)
+                    mds <- mds +
+                        geom_text_repel(data=for.ggplot,mapping=aes(x=x,y=y,
+                            label=rownames(for.ggplot)),size=3)
+                mds
+            },
+            warning=function(w) {
+                currentCorrelation$mdsRsq <- NULL
+                currentCorrelation$warnMds
+            },
+            error=function(e) {
+                currentCorrelation$mdsRsq <- NULL
+                currentCorrelation$errorMds
+            },
+            finally="")            
+        }
+    })
+    
+    output$smallMdsRsqDisplay <- renderText({
+        if (is.null(currentCorrelation$mdsRsq))
+            "R-square goodness of fit:"
+        else
+            paste("R-square goodness of fit:",
+                round(currentCorrelation$mdsRsq,5))
     })
     
     output$rnaCorrelationMatrix <- renderUI({
@@ -204,6 +290,11 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
             )
         else
             cormat <- round(currentCorrelation$corMatrix,digits=3)
+        if (currentCorrelation$what=="genes") {
+            gg <- loadedGenomes[[currentMetadata$genome]]$geneNames
+            m <- match(rownames(currentCorrelation$corMatrix),gg)
+            rownames(cormat) <- colnames(cormat) <- names(gg[m])
+        }
         output$rnaCorCorMatrix <- 
             DT::renderDataTable(
                 cormat,
@@ -237,15 +328,41 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
                 name=character(0),
                 value=numeric(0)
             )
-        else
-            currentCorrelation$datMatrix,
+        else {
+            s <- currentMetadata$source
+            d <- currentMetadata$dataset
+            gNames <- as.character(loadedGenomes[[
+                currentMetadata$genome]]$dbGene[rownames(
+                currentCorrelation$datMatrix)]$gene_name)
+            data.frame(
+                gene_name=gNames,
+                currentCorrelation$datMatrix
+            )
+        },
         class="display compact",
-        #rownames=FALSE,
+        rownames=FALSE,
         options=list(
             searchHighlight=TRUE,
             pageLength=10,
             lengthMenu=c(10,20,50,100)
         )
+    )
+    
+    output$exportRnaCorrelationMatrix <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("corr_matrix_",tt,".txt", sep='')
+        },
+        content=function(con) {
+            cormat <- round(currentCorrelation$corMatrix,digits=5)
+            if (currentCorrelation$what=="genes") {
+                gg <- loadedGenomes[[currentMetadata$genome]]$geneNames
+                m <- match(rownames(currentCorrelation$corMatrix),gg)
+                rownames(cormat) <- colnames(cormat) <- names(gg[m])
+            }
+            write.table(cormat,file=con,sep="\t",quote=FALSE,row.names=TRUE,
+                col.names=NA)
+        }
     )
     
     output$exportCorrelationPDF <- downloadHandler(
@@ -254,6 +371,62 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
             paste("rna_correlation_",tt,".pdf", sep='')
         },
         content=function(con) {
+            require(gplots)
+            corMat <- currentCorrelation$corMatrix
+            pdf(file=con)
+            n <- dim(corMat)[1]
+            if (currentCorrelation$what=="genes") {
+                gg <- loadedGenomes[[currentMetadata$genome]]$geneNames
+                m <- match(rownames(currentCorrelation$corMatrix),gg)
+                labrow <- labcol <- names(gg[m])
+            }
+            else
+                labrow <- labcol <- rownames(currentCorrelation$corMatrix)
+            if (n<=100) {
+                labs <- matrix(NA,n,n)
+                for (i in 1:n)
+                    for (j in 1:n)
+                        labs[i,j] <- sprintf("%.2f",corMat[i,j])
+                if (n <= 5)
+                    notecex <- 1.2
+                else if (n > 5 & n < 10)
+                    notecex <- 0.9
+                else
+                    notecex <- 0.7
+                heatmap.2(
+                    corMat,
+                    col=colorRampPalette(currentCorrelation$opts$colors),
+                    revC=TRUE,
+                    trace="none",
+                    symm=currentCorrelation$opts$symm,
+                    Colv=TRUE,
+                    cellnote=labs,
+                    keysize=1,
+                    density.info="density",
+                    notecex=notecex,
+                    cexCol=0.9,
+                    cexRow=0.9,
+                    font.lab=2,
+                    labRow=labrow,
+                    labCol=labcol
+                )
+            }
+            else {
+                heatmap.2(
+                    corMat,
+                    col=colorRampPalette(currentCorrelation$opts$colors),
+                    revC=TRUE,
+                    trace="none",
+                    symm=currentCorrelation$opts$symm,
+                    Colv=TRUE,
+                    keysize=1,
+                    density.info="density",
+                    cexCol=0.9,
+                    cexRow=0.9,
+                    font.lab=2
+                )
+            }
+            dev.off()
         }
     )
     
@@ -263,6 +436,62 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
             paste("rna_correlation_",tt,".png", sep='')
         },
         content=function(con) {
+            require(gplots)
+            corMat <- currentCorrelation$corMatrix
+            png(filename=con,width=800,height=800)
+            n <- dim(corMat)[1]
+            if (currentCorrelation$what=="genes") {
+                gg <- loadedGenomes[[currentMetadata$genome]]$geneNames
+                m <- match(rownames(currentCorrelation$corMatrix),gg)
+                labrow <- labcol <- names(gg[m])
+            }
+            else
+                labrow <- labcol <- rownames(currentCorrelation$corMatrix)
+            if (n<=100) {
+                labs <- matrix(NA,n,n)
+                for (i in 1:n)
+                    for (j in 1:n)
+                        labs[i,j] <- sprintf("%.2f",corMat[i,j])
+                if (n <= 5)
+                    notecex <- 1.2
+                else if (n > 5 & n < 10)
+                    notecex <- 0.9
+                else
+                    notecex <- 0.7
+                heatmap.2(
+                    corMat,
+                    col=colorRampPalette(currentCorrelation$opts$colors),
+                    revC=TRUE,
+                    trace="none",
+                    symm=currentCorrelation$opts$symm,
+                    Colv=TRUE,
+                    cellnote=labs,
+                    keysize=1,
+                    density.info="density",
+                    notecex=notecex,
+                    cexCol=0.9,
+                    cexRow=0.9,
+                    font.lab=2,
+                    labRow=labrow,
+                    labCol=labcol
+                )
+            }
+            else {
+                heatmap.2(
+                    corMat,
+                    col=colorRampPalette(currentCorrelation$opts$colors),
+                    revC=TRUE,
+                    trace="none",
+                    symm=currentCorrelation$opts$symm,
+                    Colv=TRUE,
+                    keysize=1,
+                    density.info="density",
+                    cexCol=0.9,
+                    cexRow=0.9,
+                    font.lab=2
+                )
+            }
+            dev.off()
         }
     )
 }

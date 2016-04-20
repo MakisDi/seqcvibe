@@ -1,105 +1,110 @@
 correlationTabPanel <- function() {
     fluidRow(column(3,
         wellPanel(
-            h4("Gene settings"),
-            fluidRow(column(12,
-                h4("Gene settings"),
-                radioButtons(
-                    inputId="rnaCorrelationGeneList",
-                    label="Select genes",
-                    choices=list(
-                        "All genes with non-zero counts"="all",
-                        "Custom list"="custom",
-                        "Select from list"="select"
-                    )
-                ),
-                conditionalPanel(
-                    condition=
-                        "input.rnaCorrelationGeneList=='select'",
-                    selectizeInput(
-                        inputId="selectCorrelationGeneName",
-                        label="Select genes to correlate",
-                        multiple=TRUE,
-                        choices=NULL,
-                        options=list(
-                            placeholder="Type some gene names",
-                            selectOnTab=TRUE
+            h4("Settings"),
+            tabsetPanel(
+                id="correlationSettings",
+                tabPanel(
+                    title="Genes",
+                    fluidRow(column(12,
+                        h4("Gene settings"),
+                        radioButtons(
+                            inputId="rnaCorrelationGeneList",
+                            label="Select genes",
+                            choices=list(
+                                "All genes with non-zero counts"="all",
+                                "Custom list"="custom",
+                                "Select from list"="select"
+                            )
+                        ),
+                        conditionalPanel(
+                            condition=
+                                "input.rnaCorrelationGeneList=='select'",
+                            selectizeInput(
+                                inputId="selectCorrelationGeneName",
+                                label="Select genes to correlate",
+                                multiple=TRUE,
+                                choices=NULL,
+                                options=list(
+                                    placeholder="Type some gene names",
+                                    selectOnTab=TRUE
+                                )
+                            )
+                        ),
+                        conditionalPanel(
+                            condition=
+                                "input.rnaCorrelationGeneList=='custom'",
+                            tags$textarea(
+                                id="rnaCorrelationCustomList",
+                                class="bsv-textarea",
+                                rows=5,cols=30,
+                                placeholder=paste("Paste gene names ",
+                                    "separated by newlines",sep="")
+                            )
                         )
-                    )
-                ),
-                conditionalPanel(
-                    condition=
-                        "input.rnaCorrelationGeneList=='custom'",
-                    tags$textarea(
-                        id="rnaCorrelationCustomList",
-                        class="bsv-textarea",
-                        rows=5,cols=30,
-                        placeholder=paste("Paste gene names ",
-                            "separated by newlines",sep="")
-                    )
-                )
-            )),
-            fluidRow(column(12,
-                h4("Expression measurement"),
-                radioButtons(
-                    inputId="rnaCorrelationMeasureRadio",
-                    label="Select expression measure",
-                    choices=list(
-                        "Normalized counts"="counts",
-                        "RPKM"="rpkm",
-                        "RPGM"="rpgm"
-                    )
-                ),
-                radioButtons(
-                    inputId="rnaCorrelationScaleRadio",
-                    label="Select expression scale",
-                    choices=list(
-                        "Natural"="natural",
-                        "log2"="log2"
-                    )
-                )
-            )),
-
-
-            fluidRow(column(12,
-                h4("Correlation settings"),
-                radioButtons(
-                    inputId="rnaCorrelateWhat",
-                    label="Select type of expression correlation",
-                    choices=list(
-                        "Sample-wise (all dataset samples)"="samples",
-                        "Gene-wise (all selected genes)"="allgenes",
-                        "Gene-wise (reference gene against selected)"=
-                            "refgene"
-                    )
-                ),
-                conditionalPanel(
-                    condition="input.rnaCorrelateWhat=='refgene'",
-                    selectizeInput(
-                        inputId="rnaCorrelationRefGene",
-                        label="Select a reference gene",
-                        multiple=FALSE,
-                        choices="",
-                        options=list(
-                            placeholder="Type a gene name",
-                            selectOnTab=TRUE
+                    )),
+                    fluidRow(column(12,
+                        h4("Expression measurement"),
+                        radioButtons(
+                            inputId="rnaCorrelationMeasureRadio",
+                            label="Select expression measure",
+                            choices=list(
+                                "Normalized counts"="counts",
+                                "RPKM"="rpkm",
+                                "RPGM"="rpgm"
+                            )
+                        ),
+                        radioButtons(
+                            inputId="rnaCorrelationScaleRadio",
+                            label="Select expression scale",
+                            choices=list(
+                                "Natural"="natural",
+                                "log2"="log2"
+                            )
                         )
-                    )
+                    ))
+                ),
+                tabPanel(
+                    title="Correlation",
+                    fluidRow(column(12,
+                        h4("Correlation settings"),
+                        radioButtons(
+                            inputId="rnaCorrelateWhat",
+                            label="Select type of expression correlation",
+                            choices=list(
+                                "Sample-wise (all dataset samples)"="samples",
+                                "Gene-wise (all selected genes)"="allgenes",
+                                "Gene-wise (reference gene against selected)"=
+                                    "refgene"
+                            )
+                        ),
+                        conditionalPanel(
+                            condition="input.rnaCorrelateWhat=='refgene'",
+                            selectizeInput(
+                                inputId="rnaCorrelationRefGene",
+                                label="Select a reference gene",
+                                multiple=FALSE,
+                                choices="",
+                                options=list(
+                                    placeholder="Type a gene name",
+                                    selectOnTab=TRUE
+                                )
+                            )
+                        )
+                    )),
+                    fluidRow(column(12,
+                        selectizeInput(
+                            inputId="rnaCorrelationMethod",
+                            label="Select correlation method",
+                            multiple=FALSE,
+                            choices=c(
+                                Pearson="pearson",
+                                Spearman="spearman"
+                            )
+                        )
+                    ))      
                 )
-            )),
-            fluidRow(column(12,
-                selectizeInput(
-                    inputId="rnaCorrelationMethod",
-                    label="Select correlation method",
-                    multiple=FALSE,
-                    choices=c(
-                        Pearson="pearson",
-                        Spearman="spearman"
-                    )
-                )
-            )),
-            
-
+            ),
             fluidRow(br()),
             fluidRow(column(8,
                 htmlOutput("rnaCorrelationSettingsError")
@@ -114,27 +119,38 @@ correlationTabPanel <- function() {
                     )
                  )
             ))
+        ),
+        wellPanel(
+            fluidRow(column(12,
+                plotOutput("smallMds",width="320px",height="320px")
+            )),
+            fluidRow(br()),
+            fluidRow(column(12,
+                div(class="small",
+                    verbatimTextOutput("smallMdsRsqDisplay")
+                )
+            ))
         )
     ),column(9,
-        fluidRow(column(9,
+        fluidRow(column(10,
             htmlOutput("correlationOutput")
-        ),column(3,
+        ),column(2,
             wellPanel(
-                h4("Heatmap controls"),
+                h4("Plot controls"),
                 fluidRow(column(12,
                     colourInput(
                         inputId="corrColourHigh",
-                        label="Colour for high correlation",
+                        label="High correlation",
                         value="#0000FF"
                     ),
                     colourInput(
                         inputId="corrColourNo",
-                        label="Colour for no correlation",
+                        label="No correlation",
                         value="#BEBEBE"
                     ),
                     colourInput(
                         inputId="corrColourLow",
-                        label="Colour for low correlation",
+                        label="Low correlation",
                         value="#FFFF00"
                     )
                 )),
@@ -146,7 +162,6 @@ correlationTabPanel <- function() {
                     )
                 )),
                 fluidRow(br()),
-                h4("Export controls"),
                 fluidRow(column(12,
                     downloadButton(
                         outputId="exportCorrelationPNG",
@@ -162,17 +177,16 @@ correlationTabPanel <- function() {
                         #icon=icon("file-pdf-o"),
                         class="btn-with-margin"
                     )
-                )),
-                div(style="display:block;height:160px;","")
+                ))
             )
         )),
         fluidRow(br()),
-        fluidRow(column(5,
+        fluidRow(column(6,
             wellPanel(
                 h4("Correlation matrix"),
                 htmlOutput("rnaCorrelationMatrix")
             )
-        ),column(7,
+        ),column(6,
             wellPanel(
                 h4("Data matrix"),
                 div(

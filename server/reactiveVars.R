@@ -241,7 +241,7 @@ initReactiveVars <- function() {
     )
     
     currentCorrelation <- reactiveValues(
-        entry=ggplot(data=data.frame(x=1:100,y=1:100)) + 
+        entryCor=ggplot(data=data.frame(x=1:100,y=1:100)) + 
             geom_text(data=data.frame(x=50,y=50,
                 label="Resulting figures will\nbe displayed here"),
                 aes(x=x,y=y,label=label),size=10) +
@@ -259,7 +259,7 @@ initReactiveVars <- function() {
                 panel.grid.minor=element_blank(),
                 plot.background=element_blank()
             ),
-        error=ggplot(data=data.frame(x=1:100,y=1:100)) + 
+        errorCor=ggplot(data=data.frame(x=1:100,y=1:100)) + 
             geom_text(data=data.frame(x=50,y=50,
                 label=paste("Correlation analysis has failed.\nThe most ",
                     "probable reason is that the\nselected gene set does not ",
@@ -280,8 +280,63 @@ initReactiveVars <- function() {
                 panel.grid.minor=element_blank(),
                 plot.background=element_blank()
             ),
+        entryMds=ggplot(data=data.frame(x=1:100,y=1:100)) + 
+            geom_text(data=data.frame(x=50,y=50,
+                label="MDS sample will\nbe displayed here"),
+                aes(x=x,y=y,label=label),size=5) +
+            theme(
+                axis.line=element_blank(),
+                axis.text.x=element_blank(),
+                axis.text.y=element_blank(),
+                axis.ticks=element_blank(),
+                axis.title.x=element_blank(),
+                axis.title.y=element_blank(),
+                legend.position="none",
+                panel.background=element_blank(),
+                panel.border=element_blank(),
+                panel.grid.major=element_blank(),
+                panel.grid.minor=element_blank(),
+                plot.background=element_blank()
+            ),
+        warnMds=ggplot(data=data.frame(x=1:100,y=1:100)) + 
+            geom_text(data=data.frame(x=50,y=50,
+                label="MDS failed! Try\nchanging some parameters."),
+                aes(x=x,y=y,label=label),size=5,color="orange") +
+            theme(
+                axis.line=element_blank(),
+                axis.text.x=element_blank(),
+                axis.text.y=element_blank(),
+                axis.ticks=element_blank(),
+                axis.title.x=element_blank(),
+                axis.title.y=element_blank(),
+                legend.position="none",
+                panel.background=element_blank(),
+                panel.border=element_blank(),
+                panel.grid.major=element_blank(),
+                panel.grid.minor=element_blank(),
+                plot.background=element_blank()
+            ),
+        errorMds=ggplot(data=data.frame(x=1:100,y=1:100)) + 
+            geom_text(data=data.frame(x=50,y=50,
+                label="Error creating MDS!\nSee error on the right"),
+                aes(x=x,y=y,label=label),size=5,color="red2") +
+            theme(
+                axis.line=element_blank(),
+                axis.text.x=element_blank(),
+                axis.text.y=element_blank(),
+                axis.ticks=element_blank(),
+                axis.title.x=element_blank(),
+                axis.title.y=element_blank(),
+                legend.position="none",
+                panel.background=element_blank(),
+                panel.border=element_blank(),
+                panel.grid.major=element_blank(),
+                panel.grid.minor=element_blank(),
+                plot.background=element_blank()
+            ),
         corMatrix=NULL,
         datMatrix=NULL,
+        mdsRsq=NULL,
         what="samples",
         opts=list(
             method="pearson",
