@@ -2,7 +2,6 @@ correlationTabPanelEventReactive <- function(input,output,session,
     allReactiveVars,allReactiveMsgs) {
     currentMetadata <- allReactiveVars$currentMetadata
     currentCustomRnaTables <- allReactiveVars$currentCustomRnaTables
-    #currentRnaDeTable <- allReactiveVars$currentRnaDeTable
     currentCorrelation <- allReactiveVars$currentCorrelation
         
     performRnaCorrelation <- eventReactive(input$performRnaCorrelation,{
@@ -25,6 +24,9 @@ correlationTabPanelEventReactive <- function(input,output,session,
         switch(input$rnaCorrelationGeneList,
             select = {
                 g <- input$selectCorrelationGeneName
+                if (input$rnaCorrelateWhat=="refgene" 
+					&& !isEmpty(input$rnaCorrelationRefGene))
+					g <- unique(c(input$rnaCorrelationRefGene,g))
             },
             custom = {
                 g <- input$rnaCorrelationCustomList
@@ -35,10 +37,18 @@ correlationTabPanelEventReactive <- function(input,output,session,
                 if (length(na)>0)
                     m <- m[-na]
                 g <- genes[m]
+                if (input$rnaCorrelateWhat=="refgene" 
+					&& !isEmpty(input$rnaCorrelationRefGene))
+					g <- unique(c(input$rnaCorrelationRefGene,g))
             },
             all = {
                 bad <- apply(D$norm,1,function(x) { return(all(x==0)) })
                 g <- genes[-which(bad)]
+                if (input$rnaCorrelateWhat=="refgene" 
+					&& !isEmpty(input$rnaCorrelationRefGene)) {
+						if (!(input$rnaCorrelationRefGene %in% g))
+							g <- unique(c(input$rnaCorrelationRefGene,g))
+					}
             }
         )
         
@@ -96,16 +106,21 @@ correlationTabPanelEventReactive <- function(input,output,session,
         switch(input$rnaCorrelateWhat,
             samples = {
                 currentCorrelation$what <- "samples"
+                currentCorrelation$refGene <- NULL
                 currentCorrelation$corMatrix <- cor(tab,
                     method=input$rnaCorrelationMethod)
             },
             allgenes = {
                 currentCorrelation$what <- "genes"
+                currentCorrelation$refGene <- NULL
                 currentCorrelation$corMatrix <- cor(t(tab),
                     method=input$rnaCorrelationMethod)
             },
             refgene = {
                 currentCorrelation$what <- "genes"
+                currentCorrelation$refGene <- input$rnaCorrelationRefGene
+                currentCorrelation$corMatrix <- cor(t(tab),
+                    method=input$rnaCorrelationMethod)
             }
         )
         
@@ -141,7 +156,60 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
             plotOutput("correlation",height="640px")
         }
         else {
-            if (any(is.na(currentCorrelation$corMatrix))) {
+			if (!is.null(currentCorrelation$refGene)) {
+				s <- currentMetadata$source
+				d <- currentMetadata$dataset
+				cc <- currentMetadata$final$class
+				D <- currentCorrelation$datMatrix
+				r <- currentCorrelation$refGene
+				x <- D[r,]
+				D <- D[setdiff(rownames(D),r),]
+				
+				gNames <- as.character(loadedGenomes[[
+					currentMetadata$genome]]$dbGene[
+						rownames(D)]$gene_name)
+				rg <- as.character(loadedGenomes[[
+					currentMetadata$genome]]$dbGene[r]$gene_name)
+				rownames(D) <- gNames
+				melted <- melt(t(D))
+				
+				X <- rep(x,nrow(D))
+				Y <- as.numeric(melted$value)
+				X <- X/max(c(X,Y))
+				Y <- Y/max(c(X,Y))
+				
+				pwCorrData <- data.frame(
+					X=X,
+					Y=Y,
+					Gene=melted$X2,
+					Condition=rep(cc,nrow(D))
+				)
+				
+				pwCorrPlot <- ggplot() +
+					geom_point(data=pwCorrData,aes(x=X,y=Y,
+						colour=Condition,fill=Condition,shape=Gene),
+						size=2) +
+					geom_line(data=pwCorrData,aes(x=X,y=Y,linetype=Gene),
+						colour="#AEAEAE") +
+					xlab(paste("Reference expression (",rg,")",sep="")) +
+					ylab("Expression of query genes\n") +
+					theme_bw() +
+                    theme(
+                        axis.title.x=element_text(size=12),
+                        axis.title.y=element_text(size=12),
+                        axis.text.x=element_text(size=10,face="bold"),
+                        axis.text.y=element_text(size=10,face="bold"),
+                        legend.position="bottom",
+                        legend.title=element_text(size=11,face="bold"),
+                        legend.text=element_text(size=10),
+                        legend.key=element_blank()
+                    )
+                output$correlation <- renderPlot({
+					pwCorrPlot
+				})
+				plotOutput("correlation",height="640px")
+			}
+            else if (any(is.na(currentCorrelation$corMatrix))) {
                 output$correlation <- renderPlot({
                     currentCorrelation$errorCor
                 })

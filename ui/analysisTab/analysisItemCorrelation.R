@@ -122,7 +122,7 @@ correlationTabPanel <- function() {
         ),
         wellPanel(
             fluidRow(column(12,
-                plotOutput("smallMds",width="320px",height="320px")
+                plotOutput("smallMds",width="100%",height="320px")
             )),
             fluidRow(br()),
             fluidRow(column(12,

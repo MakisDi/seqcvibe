@@ -337,6 +337,7 @@ initReactiveVars <- function() {
         corMatrix=NULL,
         datMatrix=NULL,
         mdsRsq=NULL,
+        refGene=NULL,
         what="samples",
         opts=list(
             method="pearson",
