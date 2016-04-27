@@ -669,17 +669,18 @@ getGeneCoordinatesForSpline <- function(gene,anndb,flank=NULL) {
         val <- gene[[i]]
         switch(class(val),
             character = {
-                tryCatch(valCoords <- anndb[val],
+                valCoords <- tryCatch(anndb[val],
                 error=function(e) {
                     m <- match(val,as.character(anndb$gene_name))
                     if (length(m)>0) {
                         w <- width(anndb[m])
                         mm <- m[which(w==max(w))[1]]
-                        valCoords <- anndb[mm]
+                        #valCoords <- anndb[mm]
+                        anndb[mm]
                     }
                     else
-                        valCoords <- preCoords[m]
-                        
+                        #valCoords <- preCoords[m]
+                        preCords[m]
                 },finally="")
             },
             GRanges = {

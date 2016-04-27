@@ -1574,6 +1574,19 @@ diffExprTabPanelObserve <- function(input,output,session,
     observe({
         tryCatch({
             shinyjs::disable("performDeAnalysis")
+            # Clear interaction with MA plot
+            updateCheckboxInput(session,"toggleRnaDeTableUpdate",value=FALSE)
+            updateCheckboxInput(session,"toggleRnaDeZoom",value=FALSE)
+            # Clear filters
+            currentRnaDeTable$tableFilters <- list(
+                p=0.05,
+                fdr=0.05,
+                scale="natural",
+                fc=c(0.5,2),
+                bt=NULL,
+                genes=NULL,
+                chr=NULL
+            )
             runPipeline()
         },error=function(e) {
             #print(e)
