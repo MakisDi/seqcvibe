@@ -16,6 +16,7 @@ shinyServer(
         source("server/analysisTab/analysisItemDiffExpr.R",local=TRUE)
         source("server/analysisTab/analysisItemClustering.R",local=TRUE)
         source("server/analysisTab/analysisItemCorrelation.R",local=TRUE)
+        source("server/analysisTab/analysisItemMdsPca.R",local=TRUE)
         source("server/genomeBrowserTab/genomeBrowserItem.R",local=TRUE)
         
         # Make %#^%$^%$@( globals visible AND changeable
@@ -57,6 +58,10 @@ shinyServer(
             
         # Analysis - Correlation
         correlationTabPanelObserve(input,output,session,allReactiveVars,
+            allReactiveMsgs)
+            
+        # Analysis - MDS/PCA
+        mdsPcaTabPanelObserve(input,output,session,allReactiveVars,
             allReactiveMsgs)
         
         # Genome browser

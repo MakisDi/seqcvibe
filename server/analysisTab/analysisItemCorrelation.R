@@ -632,7 +632,7 @@ correlationTabPanelObserve <- function(input,output,session,
             shinyjs::disable("performRnaCorrelation")
             performRnaCorrelation()
         },error=function(e) {
-            print(e)
+            #print(e)
         },
         finally={
             shinyjs::enable("performRnaCorrelation")

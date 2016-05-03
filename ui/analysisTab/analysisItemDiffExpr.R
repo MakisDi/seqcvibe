@@ -324,7 +324,7 @@ differentialExpressionTabPanel <- function() {
                     id="rnaDeMAPlotBrush",
                     resetOnNew=TRUE
                 ),
-                height="660px"
+                height="600px"
             )
         ),column(2,
             wellPanel(
@@ -352,34 +352,36 @@ differentialExpressionTabPanel <- function() {
             ),
             wellPanel(
                 fluidRow(column(12,
-                    h4("Plot controls"),
+                    h4("Plot colors"),
                     htmlOutput("maPlotColours")
-                )),
-                fluidRow(column(12,
-                    downloadButton(
-                        outputId="exportRnaDeMAPlotGG2",
-                        label="Export ggplot2",
-                        #icon=icon("file-image-o"),
-                        class="btn-with-margin"
-                    )
-                )),
-                fluidRow(column(12,
-                    downloadButton(
-                        outputId="exportRnaDeMAPlotPNG",
-                        label="Export PNG",
-                        #icon=icon("file-image-o"),
-                        class="btn-with-margin"
-                    )
-                )),
-                fluidRow(column(12,
-                    downloadButton(
-                        outputId="exportRnaDeMAPlotPDF",
-                        label="Export PDF",
-                        #icon=icon("file-pdf-o"),
-                        class="btn-with-margin"
-                    )
                 ))
             )
+        )),
+        fluidRow(column(4,
+            div("")
+        ),column(2,
+            downloadButton(
+				outputId="exportRnaDeMAPlotGG2",
+				label="Export ggplot2",
+				#icon=icon("file-image-o"),
+				class="pull-right"
+			)
+        ),column(2,
+            downloadButton(
+				outputId="exportRnaDeMAPlotPNG",
+				label="Export PNG",
+				#icon=icon("file-image-o"),
+				class="pull-right"
+			)
+        ),column(2,
+			downloadButton(
+				outputId="exportRnaDeMAPlotPDF",
+				label="Export PDF",
+				#icon=icon("file-pdf-o"),
+				class="pull-right"
+			)
+        ),column(2,
+            div("")
         )),
         fluidRow(br()),
         fluidRow(column(12,

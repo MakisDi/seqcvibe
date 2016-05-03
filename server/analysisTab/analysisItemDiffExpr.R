@@ -896,21 +896,18 @@ diffExprTabPanelReactive <- function(input,output,session,
     })
     
     updateMaPlotColours <- reactive({
-        c <- isolate(maPlots$maColours)
-        lapply(names(c),function(x) {
+        macs <- isolate(maPlots$maColours)
+        if (is.null(names(macs)))
+			names(macs) <- c("Up","Down","Neutral")
+        lapply(names(macs),function(x) {
             observeEvent(input[[paste("maPlotColour_",x,sep="")]],{
                 newc <- input[[paste("maPlotColour_",x,sep="")]]
-                if (newc!=maPlots$maColours[[x]]) {
-                    maPlots$maColours[[x]] <- newc
-                    #areaExplorerMessages <- updateMessages(
-                    #    areaExplorerMessages,
-                    #    type="SUCCESS",
-                    #    msg=paste(getTime("SUCCESS"),"Class ",x," colour ",
-                    #    "changed! New colour: ",newc,sep="")
-                    #)
-                }
+                if (newc!=macs[[x]])
+                    macs[[x]] <- newc
+                    #maPlots$maColours[[x]] <- newc
             })
         })
+        maPlots$maColours <- macs
     })
     
     return(list(
@@ -1145,11 +1142,14 @@ diffExprTabPanelRenderUI <- function(output,session,allReactiveVars,
             )
         else {
             totalTable <- currentRnaDeTable$totalTable
-            res <- totalTable[,c("gene_name","pvalue","fdr")]
+            ann <- totalTable[,c("chromosome","start","end","gene_id",
+                "strand","gene_name","biotype")]
+            sta <- totalTable[,c("pvalue","fdr")]
+            fla <- totalTable[,c("gene_name","LN","MD","MN","QN","KN","BT")]
             fcInd <- grep("_vs_",names(totalTable))
             avgInd <- grep("mean|median",colnames(totalTable),perl=TRUE)
             devInd <- grep("sd|mad|IQR",colnames(totalTable),perl=TRUE)
-            res <- cbind(res,totalTable[,c(fcInd,avgInd,devInd)])
+            res <- cbind(ann,sta,totalTable[,c(fcInd,avgInd,devInd)],fla)
             output$rnaDeAnalysisAllTable <-
                 DT::renderDataTable(
                     res,
@@ -1265,8 +1265,10 @@ diffExprTabPanelRenderUI <- function(output,session,allReactiveVars,
     
     output$maPlotColours <- renderUI({
         c <- maPlots$maColours
+        if (is.null(names(c)))
+			names(c) <- c("Up","Down","Neutral")
         lapply(names(c),function(x,c) {
-            colourInput(
+			colourInput(
                 inputId=paste("maPlotColour_",x,sep=""),
                 label=paste(x,"colour"),
                 value=c[[x]]

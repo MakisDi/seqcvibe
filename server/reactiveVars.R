@@ -35,24 +35,7 @@ initReactiveVars <- function() {
     )
     
     genePlots <- reactiveValues(
-        geneProfile=ggplot(data=data.frame(x=1:100,y=1:100)) + 
-            geom_text(data=data.frame(x=50,y=50,
-                label="Gene profiles will\nbe displayed here"),
-                aes(x=x,y=y,label=label),size=10) +
-            theme(
-                axis.line=element_blank(),
-                axis.text.x=element_blank(),
-                axis.text.y=element_blank(),
-                axis.ticks=element_blank(),
-                axis.title.x=element_blank(),
-                axis.title.y=element_blank(),
-                legend.position="none",
-                panel.background=element_blank(),
-                panel.border=element_blank(),
-                panel.grid.major=element_blank(),
-                panel.grid.minor=element_blank(),
-                plot.background=element_blank()
-            ),
+        geneProfile=ggmessage("Gene profiles will\nbe displayed here"),
         rendered=TRUE
     )
     
@@ -73,24 +56,7 @@ initReactiveVars <- function() {
     )
     
     areaPlots <- reactiveValues(
-        areaProfile=ggplot(data=data.frame(x=1:100,y=1:100)) + 
-            geom_text(data=data.frame(x=50,y=50,
-                label="Area profiles will\nbe displayed here"),
-                aes(x=x,y=y,label=label),size=10) +
-            theme(
-                axis.line=element_blank(),
-                axis.text.x=element_blank(),
-                axis.text.y=element_blank(),
-                axis.ticks=element_blank(),
-                axis.title.x=element_blank(),
-                axis.title.y=element_blank(),
-                legend.position="none",
-                panel.background=element_blank(),
-                panel.border=element_blank(),
-                panel.grid.major=element_blank(),
-                panel.grid.minor=element_blank(),
-                plot.background=element_blank()
-            ),
+        areaProfile=ggmessage("Area profiles will\nbe displayed here"),
         rendered=FALSE
     )
     
@@ -113,24 +79,7 @@ initReactiveVars <- function() {
     maPlots <- reactiveValues(
         #maPlot=data.frame(A=1,M=1,Status=1,
         #    Gene="Resulting MA plots will be displayed here"),
-        maPlot=ggplot(data=data.frame(x=1:100,y=1:100)) + 
-            geom_text(data=data.frame(x=50,y=50,
-                label="Resulting MA plots will\nbe displayed here"),
-                aes(x=x,y=y,label=label),size=10) +
-            theme(
-                axis.line=element_blank(),
-                axis.text.x=element_blank(),
-                axis.text.y=element_blank(),
-                axis.ticks=element_blank(),
-                axis.title.x=element_blank(),
-                axis.title.y=element_blank(),
-                legend.position="none",
-                panel.background=element_blank(),
-                panel.border=element_blank(),
-                panel.grid.major=element_blank(),
-                panel.grid.minor=element_blank(),
-                plot.background=element_blank()
-            ),
+        maPlot=ggmessage("Resulting MA plots will\nbe displayed here"),
         maData=NULL,
         maColours=list(
             Up="#B40000",
@@ -168,65 +117,14 @@ initReactiveVars <- function() {
     )
     
     currentHeatmap <- reactiveValues(
-        entry=ggplot(data=data.frame(x=1:100,y=1:100)) + 
-            geom_text(data=data.frame(x=50,y=50,
-                label="Resulting heatmap will\nbe displayed here"),
-                aes(x=x,y=y,label=label),size=10) +
-            theme(
-                axis.line=element_blank(),
-                axis.text.x=element_blank(),
-                axis.text.y=element_blank(),
-                axis.ticks=element_blank(),
-                axis.title.x=element_blank(),
-                axis.title.y=element_blank(),
-                legend.position="none",
-                panel.background=element_blank(),
-                panel.border=element_blank(),
-                panel.grid.major=element_blank(),
-                panel.grid.minor=element_blank(),
-                plot.background=element_blank()
-            ),
-        timeout=ggplot(data=data.frame(x=1:100,y=1:100)) + 
-            geom_text(data=data.frame(x=50,y=50,
-                label=paste("Clustering operation took too long\nto complete",
-                    " andwas aborted.\nConsider lowering the number of genes",
-                    "\nand/or conditions to prevent this.",sep="")),
-                aes(x=x,y=y,label=label),size=9) +
-            theme(
-                axis.line=element_blank(),
-                axis.text.x=element_blank(),
-                axis.text.y=element_blank(),
-                axis.ticks=element_blank(),
-                axis.title.x=element_blank(),
-                axis.title.y=element_blank(),
-                legend.position="none",
-                panel.background=element_blank(),
-                panel.border=element_blank(),
-                panel.grid.major=element_blank(),
-                panel.grid.minor=element_blank(),
-                plot.background=element_blank()
-            ),
-        error=ggplot(data=data.frame(x=1:100,y=1:100)) + 
-            geom_text(data=data.frame(x=50,y=50,
-                label=paste("Clustering operation resulted in an error\nmost ",
-                    "probably because of memory reasons.\nConsider lowering ",
-                    "the number of genes\nand/or conditions to prevent this.",
-                    sep="")),
-                aes(x=x,y=y,label=label),size=9,color="red2") +
-            theme(
-                axis.line=element_blank(),
-                axis.text.x=element_blank(),
-                axis.text.y=element_blank(),
-                axis.ticks=element_blank(),
-                axis.title.x=element_blank(),
-                axis.title.y=element_blank(),
-                legend.position="none",
-                panel.background=element_blank(),
-                panel.border=element_blank(),
-                panel.grid.major=element_blank(),
-                panel.grid.minor=element_blank(),
-                plot.background=element_blank()
-            ),
+        entry=ggmessage("Resulting heatmap will\nbe displayed here"),
+        timeout=ggmessage(paste("Clustering operation took too long\nto ",
+			"complete and was aborted.\nConsider lowering the number of genes",
+            "\nand/or conditions to prevent this.",sep=""),type="error"),
+        error=ggmessage(paste("Clustering operation resulted in an error\n ",
+			"most probably because of memory reasons.\nConsider lowering the ",
+			"number of genes\nand/or conditions to prevent this.",sep=""),
+			type="error"),
         data=NULL,
         opts=list(
             dendrogram="both",
@@ -241,99 +139,16 @@ initReactiveVars <- function() {
     )
     
     currentCorrelation <- reactiveValues(
-        entryCor=ggplot(data=data.frame(x=1:100,y=1:100)) + 
-            geom_text(data=data.frame(x=50,y=50,
-                label="Resulting figures will\nbe displayed here"),
-                aes(x=x,y=y,label=label),size=10) +
-            theme(
-                axis.line=element_blank(),
-                axis.text.x=element_blank(),
-                axis.text.y=element_blank(),
-                axis.ticks=element_blank(),
-                axis.title.x=element_blank(),
-                axis.title.y=element_blank(),
-                legend.position="none",
-                panel.background=element_blank(),
-                panel.border=element_blank(),
-                panel.grid.major=element_blank(),
-                panel.grid.minor=element_blank(),
-                plot.background=element_blank()
-            ),
-        errorCor=ggplot(data=data.frame(x=1:100,y=1:100)) + 
-            geom_text(data=data.frame(x=50,y=50,
-                label=paste("Correlation analysis has failed.\nThe most ",
-                    "probable reason is that the\nselected gene set does not ",
-                    "show\nenough variability to produce a\ncorrelation ",
-                    "matrix. Select another gene\nset and try again.",sep="")),
-                aes(x=x,y=y,label=label),size=9,color="red2") +
-            theme(
-                axis.line=element_blank(),
-                axis.text.x=element_blank(),
-                axis.text.y=element_blank(),
-                axis.ticks=element_blank(),
-                axis.title.x=element_blank(),
-                axis.title.y=element_blank(),
-                legend.position="none",
-                panel.background=element_blank(),
-                panel.border=element_blank(),
-                panel.grid.major=element_blank(),
-                panel.grid.minor=element_blank(),
-                plot.background=element_blank()
-            ),
-        entryMds=ggplot(data=data.frame(x=1:100,y=1:100)) + 
-            geom_text(data=data.frame(x=50,y=50,
-                label="MDS sample will\nbe displayed here"),
-                aes(x=x,y=y,label=label),size=5) +
-            theme(
-                axis.line=element_blank(),
-                axis.text.x=element_blank(),
-                axis.text.y=element_blank(),
-                axis.ticks=element_blank(),
-                axis.title.x=element_blank(),
-                axis.title.y=element_blank(),
-                legend.position="none",
-                panel.background=element_blank(),
-                panel.border=element_blank(),
-                panel.grid.major=element_blank(),
-                panel.grid.minor=element_blank(),
-                plot.background=element_blank()
-            ),
-        warnMds=ggplot(data=data.frame(x=1:100,y=1:100)) + 
-            geom_text(data=data.frame(x=50,y=50,
-                label="MDS failed! Try\nchanging some parameters."),
-                aes(x=x,y=y,label=label),size=5,color="orange") +
-            theme(
-                axis.line=element_blank(),
-                axis.text.x=element_blank(),
-                axis.text.y=element_blank(),
-                axis.ticks=element_blank(),
-                axis.title.x=element_blank(),
-                axis.title.y=element_blank(),
-                legend.position="none",
-                panel.background=element_blank(),
-                panel.border=element_blank(),
-                panel.grid.major=element_blank(),
-                panel.grid.minor=element_blank(),
-                plot.background=element_blank()
-            ),
-        errorMds=ggplot(data=data.frame(x=1:100,y=1:100)) + 
-            geom_text(data=data.frame(x=50,y=50,
-                label="Error creating MDS!\nSee error on the right"),
-                aes(x=x,y=y,label=label),size=5,color="red2") +
-            theme(
-                axis.line=element_blank(),
-                axis.text.x=element_blank(),
-                axis.text.y=element_blank(),
-                axis.ticks=element_blank(),
-                axis.title.x=element_blank(),
-                axis.title.y=element_blank(),
-                legend.position="none",
-                panel.background=element_blank(),
-                panel.border=element_blank(),
-                panel.grid.major=element_blank(),
-                panel.grid.minor=element_blank(),
-                plot.background=element_blank()
-            ),
+        entryCor=ggmessage("Resulting figures will\nbe displayed here"),
+        errorCor=ggmessage(paste("Correlation analysis has failed.\nThe most ",
+			"probable reason is that the\nselected gene set does not show\n",
+			"enough variability to produce a\ncorrelation matrix. Select ",
+			"another gene\nset and try again.",sep=""),type="error"),
+        entryMds=ggmessage("MDS sample will\nbe displayed here",size="small"),
+        warnMds=ggmessage("MDS failed! Try\nchanging some parameters.",
+			type="warning",size="small"),
+        errorMds=ggmessage("Error creating MDS!\nSee error on the right",
+			type="error",size="small"),
         corMatrix=NULL,
         datMatrix=NULL,
         mdsRsq=NULL,
@@ -346,7 +161,17 @@ initReactiveVars <- function() {
         )
     )
     
-    currentMdsTables <- reactiveValues()
+    currentDimRed <- reactiveValues(
+		mdsPlot=ggmessage("Resulting MDS plots will\nbe displayed here"),
+		pcaScreePlot=
+			ggmessage("Resulting PCA scree plots\nwill be displayed here"),
+		pcaScoresPlot=
+			ggmessage("Resulting PCA score plots\nwill be displayed here"),
+		pcaLoadingsPlot=
+			ggmessage("Resulting PCA loadings plots\nwill be displayed here"),
+		pcaBiplotPlot=
+			ggmessage("Resulting PCA biplot plots\nwill be displayed here")
+    )
     
     return(list(
         currentMetadata=currentMetadata,
@@ -363,7 +188,7 @@ initReactiveVars <- function() {
         maPlots=maPlots,
         currentPipelineOutput=currentPipelineOutput,
         currentRnaDeTable=currentRnaDeTable,
-        currentMdsTables=currentMdsTables,
+        currentDimRed=currentDimRed,
         currentHeatmap=currentHeatmap,
         currentCorrelation=currentCorrelation
     ))
@@ -427,24 +252,7 @@ clearReactiveVars <- function(allReactiveVars) {
     allReactiveVars$customRegions$name <- NULL
     
     allReactiveVars$genePlots$geneProfile <- 
-        ggplot(data=data.frame(x=1:100,y=1:100)) + 
-            geom_text(data=data.frame(x=50,y=50,
-                label="Gene profiles will\nbe displayed here"),
-                aes(x=x,y=y,label=label),size=10) +
-            theme(
-                axis.line=element_blank(),
-                axis.text.x=element_blank(),
-                axis.text.y=element_blank(),
-                axis.ticks=element_blank(),
-                axis.title.x=element_blank(),
-                axis.title.y=element_blank(),
-                legend.position="none",
-                panel.background=element_blank(),
-                panel.border=element_blank(),
-                panel.grid.major=element_blank(),
-                panel.grid.minor=element_blank(),
-                plot.background=element_blank()
-            )
+        ggmessage("Gene profiles will\nbe displayed here")
     allReactiveVars$genePlots$rendered <- TRUE
     
     allReactiveVars$customArea$chromosome <- NULL
@@ -461,24 +269,7 @@ clearReactiveVars <- function(allReactiveVars) {
     allReactiveVars$customArea$name <- NULL
     
     allReactiveVars$areaPlots$areaProfile <-
-        ggplot(data=data.frame(x=1:100,y=1:100)) + 
-            geom_text(data=data.frame(x=50,y=50,
-                label="Area profiles will\nbe displayed here"),
-                aes(x=x,y=y,label=label),size=10) +
-            theme(
-                axis.line=element_blank(),
-                axis.text.x=element_blank(),
-                axis.text.y=element_blank(),
-                axis.ticks=element_blank(),
-                axis.title.x=element_blank(),
-                axis.title.y=element_blank(),
-                legend.position="none",
-                panel.background=element_blank(),
-                panel.border=element_blank(),
-                panel.grid.major=element_blank(),
-                panel.grid.minor=element_blank(),
-                plot.background=element_blank()
-            )
+        ggmessage("Area profiles will\nbe displayed here")
     allReactiveVars$areaPlots$rendered=FALSE
     
     allReactiveVars$currentTables <- reactiveValues()
@@ -493,24 +284,7 @@ clearReactiveVars <- function(allReactiveVars) {
     allReactiveVars$currentCustomRnaTables$lengths <- NULL
     
     allReactiveVars$maPlots$maPlot <- 
-        ggplot(data=data.frame(x=1:100,y=1:100)) + 
-            geom_text(data=data.frame(x=50,y=50,
-                label="Resulting MA plots will\nbe displayed here"),
-                aes(x=x,y=y,label=label),size=10) +
-            theme(
-                axis.line=element_blank(),
-                axis.text.x=element_blank(),
-                axis.text.y=element_blank(),
-                axis.ticks=element_blank(),
-                axis.title.x=element_blank(),
-                axis.title.y=element_blank(),
-                legend.position="none",
-                panel.background=element_blank(),
-                panel.border=element_blank(),
-                panel.grid.major=element_blank(),
-                panel.grid.minor=element_blank(),
-                plot.background=element_blank()
-            )
+        ggmessage("Resulting MA plots will\nbe displayed here")
     allReactiveVars$maPlots$maData <- NULL
     allReactiveVars$maPlots$maColours <- list(
         Up <- "#B40000",
@@ -542,6 +316,8 @@ clearReactiveVars <- function(allReactiveVars) {
         chr=NULL
     )
     
+    allReactiveVars$currentHeatmap$entry <- 
+		ggmessage("Resulting heatmap will\nbe displayed here")
     allReactiveVars$currentHeatmap$data <- NULL
     allReactiveVars$currentHeatmap$opts <- list(
         dendrogram="both",
@@ -553,7 +329,11 @@ clearReactiveVars <- function(allReactiveVars) {
         k_col=1,
         colors="RdYlBu"
     )
-        
+    
+    allReactiveVars$currentCorrelation$entryCor <-
+		ggmessage("Resulting figures will\nbe displayed here")
+    allReactiveVars$currentCorrelation$entryMds <- 
+		ggmessage("MDS sample will\nbe displayed here",size="small")
     allReactiveVars$currentCorrelation$corMatrix <- NULL
     allReactiveVars$currentCorrelation$datMatrix <- NULL
     allReactiveVars$currentCorrelation$what <- "samples"
@@ -563,9 +343,54 @@ clearReactiveVars <- function(allReactiveVars) {
         colors=c("#FFFF00","#BEBEBE","#0000FF")
     )
         
-    allReactiveVars$currentMdsTables <- reactiveValues()
+    allReactiveVars$currentDimRed$mdsPlot <- 
+		ggmessage("Resulting MDS plots will\nbe displayed here")
+	allReactiveVars$currentDimRed$pcaScreePlot <-
+			ggmessage("Resulting PCA scree plots\nwill be displayed here")
+	allReactiveVars$currentDimRed$pcaScoresPlot <-
+			ggmessage("Resulting PCA score plots\nwill be displayed here")
+	allReactiveVars$currentDimRed$pcaLoadingsPlot <-
+			ggmessage("Resulting PCA loadings plots\nwill be displayed here")
+	allReactiveVars$currentDimRed$pcaBiplot <-
+			ggmessage("Resulting PCA biplots plots\nwill be displayed here")
     
     return(allReactiveVars)
+}
+
+ggmessage <- function(msg="",type=c("generic","info","success","warning",
+	"error"),size=c("large","small")) {
+	type <- tolower(type[1])
+	size <- tolower(size[1])
+	switch(type,
+		generic = { color <- "black" },
+		info = { color <- "green2" },
+		success = { color <- "blue2" },
+		warning = { color <- "orange" },
+		error = { color <- "red2" }
+	)
+	switch(size,
+		large = { s <- 10 },
+		small = { s <- 5 }
+	)
+	return(
+		ggplot(data=data.frame(x=1:100,y=1:100)) + 
+            geom_text(data=data.frame(x=50,y=50,label=msg),
+                aes(x=x,y=y,label=label),colour=color,size=s) +
+            theme(
+                axis.line=element_blank(),
+                axis.text.x=element_blank(),
+                axis.text.y=element_blank(),
+                axis.ticks=element_blank(),
+                axis.title.x=element_blank(),
+                axis.title.y=element_blank(),
+                legend.position="none",
+                panel.background=element_blank(),
+                panel.border=element_blank(),
+                panel.grid.major=element_blank(),
+                panel.grid.minor=element_blank(),
+                plot.background=element_blank()
+			)
+	)
 }
 
 ## Messages boilerplate
