@@ -162,6 +162,15 @@ initReactiveVars <- function() {
     )
     
     currentDimRed <- reactiveValues(
+		datMatrix=NULL,
+		mdsObj=NULL,
+		pcaObj=NULL,
+		mdsDist=NULL,
+		mdsRsq=NULL,
+		opts=list(
+			method=NULL,
+			colors=NULL
+		),
 		mdsPlot=ggmessage("Resulting MDS plots will\nbe displayed here"),
 		pcaScreePlot=
 			ggmessage("Resulting PCA scree plots\nwill be displayed here"),

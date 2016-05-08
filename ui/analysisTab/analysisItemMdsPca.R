@@ -22,8 +22,8 @@ mdsPcaTabPanel <- function() {
                             condition=
                                 "input.rnaMdsPcaGeneList=='select'",
                             selectizeInput(
-                                inputId="selectCorrelationGeneName",
-                                label="Select genes to correlate" ,
+                                inputId="selectMdsPcaGeneName",
+                                label="Select genes for analysis" ,
                                 multiple=TRUE,
                                 choices=NULL,
                                 options=list(
@@ -69,7 +69,19 @@ mdsPcaTabPanel <- function() {
                                 "log2"="log2"
                             )
                         )
-                    ))
+                    )),
+					fluidRow(column(12,
+						div(
+							style="font-weight:bold;margin-top:10px;",
+							"Custom regions"
+						),
+						checkboxInput(
+							inputId="includeCustomRegionsInDimRed",
+							label=paste("Include regions from expression ",
+								"calculator"),
+							value=FALSE
+						)
+					))
 				),
 				tabPanel(
 					title="MDS/PCA",
@@ -122,6 +134,9 @@ mdsPcaTabPanel <- function() {
 								)
 							))
 						)
+					)),
+					fluidRow(column(12,
+						htmlOutput("rnaMdsPcaPlotColours")
 					))
 				)
 			),
@@ -133,7 +148,7 @@ mdsPcaTabPanel <- function() {
                      class="pull-right",
                      style="display:inline-block",
                      actionButton(
-                        inputId="performMdsPca",
+                        inputId="performRnaMdsPca",
                         label="Engage!",
                         icon=icon("rocket")
                     )
@@ -149,7 +164,7 @@ mdsPcaTabPanel <- function() {
 					choices=NULL
 				),
 				selectizeInput(
-					inputId="rnaDimRedXAxis",
+					inputId="rnaDimRedYAxis",
 					label="Verical (y) axis projection",
 					choices=NULL
 				),
@@ -159,6 +174,15 @@ mdsPcaTabPanel <- function() {
 						"MDS, PC refers to 'Principal Coordinate'. When the ",
 						"former is PCA, the latter refers to 'Principal ",
 						"Component'.",sep=""))
+				),
+				div(
+					style="font-weight:bold;margin-top:10px;",
+					"Custom regions"
+				),
+				checkboxInput(
+					inputId="rnaMdsPcaTogglePointNames",
+					label="Toggle sample names",
+					value=FALSE
 				)
 			))
         )
@@ -170,7 +194,7 @@ mdsPcaTabPanel <- function() {
 					id="rnaDimRedMdsPlots",
 					tabPanel(
 						title="Eigenvectors",
-						plotOutput("rnaMdsPlot")
+						plotOutput("rnaMdsPlot",height="640px")
 					)
 				)
 			),
@@ -180,22 +204,28 @@ mdsPcaTabPanel <- function() {
 					id="rnaDimRedPcaPlots",
 					tabPanel(
 						title="Scree plot",
-						plotOutput("rnaPcaScreePlot")
+						plotOutput("rnaPcaScreePlot",height="640px")
 					),
 					tabPanel(
 						title="Scores",
-						plotOutput("rnaPcaScoresPlot")
+						plotOutput("rnaPcaScoresPlot",height="640px")
 					),
 					tabPanel(
 						title="Loadings",
-						plotOutput("rnaPcaLoadingsPlot")
+						plotOutput("rnaPcaLoadingsPlot",height="640px")
 					),
 					tabPanel(
 						title="Biplot",
-						plotOutput("rnaPcaBiplotPlot")
+						plotOutput("rnaPcaBiplotPlot",height="640px")
 					)
 				)
 			)
-		))
+		)),
+		fluidRow(br()),
+		wellPanel(
+			fluidRow(column(12,
+				htmlOutput("rnaMdsPcaGenesSamples")
+			))
+		)
     ))
 }
