@@ -122,8 +122,22 @@ mdsPcaTabPanelEventReactive <- function(input,output,session,
             mds = {
                 distFun <- distFuns()
                 dfun=distFun[[input$rnaMdsDistMethod]]
-                d <- dfun(t(tab))
-                mds.obj <- cmdscale(d,eig=TRUE,k=as.numeric(input$rnaMdsKDim))
+                tryCatch({
+					d <- dfun(t(tab))
+					mds.obj <- cmdscale(d,eig=TRUE,
+						k=as.numeric(input$rnaMdsKDim))
+				},
+				warning=function(w) {
+					currentDimRed$mdsPlot <- 
+						ggmessage(paste("An unexpected warning occured:\n",
+							"Try changing your settings."),type="warning")
+				},
+				error=function(e) {
+					currentDimRed$mdsPlot <- 
+						ggmessage(paste("An unexpected error occured:\n",
+							"Try changing your settings."),type="error")
+				},
+				finally="")
             },
             pca = {
             }
@@ -204,7 +218,7 @@ mdsPcaTabPanelReactive <- function(input,output,session,
                 }
                 mds <- ggplot() +
                     geom_point(data=for.ggplot,mapping=aes(x=x,y=y,
-                        colour=Condition,shape=Condition),size=psize) +
+                        colour=Condition),size=psize) +
                     xlab(paste("\nPrincipal Coordinate",i)) +
                     ylab(paste("Principal Coordinate",j)) +
                     theme_bw() +
@@ -460,6 +474,28 @@ mdsPcaTabPanelObserve <- function(input,output,session,
         allReactiveMsgs)
         
     observe({
+        s <- currentMetadata$source
+        d <- currentMetadata$dataset
+        if (is.null(currentMetadata$final))
+            updateSelectizeInput(session,"selectMdsPcaGeneName",
+                choices=NULL,
+                server=TRUE
+            )
+        else {
+            geneNames <- loadedGenomes[[currentMetadata$genome]]$geneNames
+            g <- isolate({input$selectCorrelationGeneName})
+            i <- grep(paste0("^",g),geneNames,perl=TRUE)
+            if (length(i)>0) {
+                updateSelectizeInput(session,"selectMdsPcaGeneName",
+                    choices=geneNames[i],
+                    selected=g,
+                    server=TRUE
+                )
+            }
+        }
+    })
+    
+    observe({
         if (isEmpty(currentMetadata$final)) {
             shinyjs::disable("performRnaMdsPca")
             updateSelectizeInput(session,"rnaMdsKDim",
@@ -504,7 +540,7 @@ mdsPcaTabPanelObserve <- function(input,output,session,
             shinyjs::disable("performRnaMdsPca")
             performRnaMdsPca()
         },error=function(e) {
-            print(e)
+            #print(e)
         },
         finally={
             shinyjs::enable("performRnaMdsPca")

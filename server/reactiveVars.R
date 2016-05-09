@@ -355,6 +355,18 @@ clearReactiveVars <- function(allReactiveVars) {
         colors=c("#FFFF00","#BEBEBE","#0000FF")
     )
         
+    allReactiveVars$currentDimRed$datMatrix <- NULL
+    allReactiveVars$currentDimRed$mdsObj <- NULL
+    allReactiveVars$currentDimRed$pcaObj <- NULL
+    allReactiveVars$currentDimRed$mdsGog <- list(
+		dist=NULL,
+		rsq=NULL,
+		gof=NULL
+	)
+	allReactiveVars$currentDimRed$opts <- list(
+		method=NULL,
+		colors=NULL
+	)
     allReactiveVars$currentDimRed$mdsPlot <- 
         ggmessage("Resulting MDS plots will\nbe displayed here")
     allReactiveVars$currentDimRed$pcaScreePlot <-
