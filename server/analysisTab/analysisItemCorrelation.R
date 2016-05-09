@@ -25,8 +25,8 @@ correlationTabPanelEventReactive <- function(input,output,session,
             select = {
                 g <- input$selectCorrelationGeneName
                 if (input$rnaCorrelateWhat=="refgene" 
-					&& !isEmpty(input$rnaCorrelationRefGene))
-					g <- unique(c(input$rnaCorrelationRefGene,g))
+                    && !isEmpty(input$rnaCorrelationRefGene))
+                    g <- unique(c(input$rnaCorrelationRefGene,g))
             },
             custom = {
                 g <- input$rnaCorrelationCustomList
@@ -38,17 +38,17 @@ correlationTabPanelEventReactive <- function(input,output,session,
                     m <- m[-na]
                 g <- genes[m]
                 if (input$rnaCorrelateWhat=="refgene" 
-					&& !isEmpty(input$rnaCorrelationRefGene))
-					g <- unique(c(input$rnaCorrelationRefGene,g))
+                    && !isEmpty(input$rnaCorrelationRefGene))
+                    g <- unique(c(input$rnaCorrelationRefGene,g))
             },
             all = {
                 bad <- apply(D$norm,1,function(x) { return(all(x==0)) })
                 g <- genes[-which(bad)]
                 if (input$rnaCorrelateWhat=="refgene" 
-					&& !isEmpty(input$rnaCorrelationRefGene)) {
-						if (!(input$rnaCorrelationRefGene %in% g))
-							g <- unique(c(input$rnaCorrelationRefGene,g))
-					}
+                    && !isEmpty(input$rnaCorrelationRefGene)) {
+                        if (!(input$rnaCorrelationRefGene %in% g))
+                            g <- unique(c(input$rnaCorrelationRefGene,g))
+                    }
             }
         )
         
@@ -156,44 +156,44 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
             plotOutput("correlation",height="640px")
         }
         else {
-			if (!is.null(currentCorrelation$refGene)) {
-				s <- currentMetadata$source
-				d <- currentMetadata$dataset
-				cc <- currentMetadata$final$class
-				D <- currentCorrelation$datMatrix
-				r <- currentCorrelation$refGene
-				x <- D[r,]
-				D <- D[setdiff(rownames(D),r),]
-				
-				gNames <- as.character(loadedGenomes[[
-					currentMetadata$genome]]$dbGene[
-						rownames(D)]$gene_name)
-				rg <- as.character(loadedGenomes[[
-					currentMetadata$genome]]$dbGene[r]$gene_name)
-				rownames(D) <- gNames
-				melted <- melt(t(D))
-				
-				X <- rep(x,nrow(D))
-				Y <- as.numeric(melted$value)
-				X <- X/max(c(X,Y))
-				Y <- Y/max(c(X,Y))
-				
-				pwCorrData <- data.frame(
-					X=X,
-					Y=Y,
-					Gene=melted$X2,
-					Condition=rep(cc,nrow(D))
-				)
-				
-				pwCorrPlot <- ggplot() +
-					geom_point(data=pwCorrData,aes(x=X,y=Y,
-						colour=Condition,fill=Condition,shape=Gene),
-						size=2) +
-					geom_line(data=pwCorrData,aes(x=X,y=Y,linetype=Gene),
-						colour="#AEAEAE") +
-					xlab(paste("Reference expression (",rg,")",sep="")) +
-					ylab("Expression of query genes\n") +
-					theme_bw() +
+            if (!is.null(currentCorrelation$refGene)) {
+                s <- currentMetadata$source
+                d <- currentMetadata$dataset
+                cc <- currentMetadata$final$class
+                D <- currentCorrelation$datMatrix
+                r <- currentCorrelation$refGene
+                x <- D[r,]
+                D <- D[setdiff(rownames(D),r),]
+                
+                gNames <- as.character(loadedGenomes[[
+                    currentMetadata$genome]]$dbGene[
+                        rownames(D)]$gene_name)
+                rg <- as.character(loadedGenomes[[
+                    currentMetadata$genome]]$dbGene[r]$gene_name)
+                rownames(D) <- gNames
+                melted <- melt(t(D))
+                
+                X <- rep(x,nrow(D))
+                Y <- as.numeric(melted$value)
+                X <- X/max(c(X,Y))
+                Y <- Y/max(c(X,Y))
+                
+                pwCorrData <- data.frame(
+                    X=X,
+                    Y=Y,
+                    Gene=melted$X2,
+                    Condition=rep(cc,nrow(D))
+                )
+                
+                pwCorrPlot <- ggplot() +
+                    geom_point(data=pwCorrData,aes(x=X,y=Y,
+                        colour=Condition,fill=Condition,shape=Gene),
+                        size=2) +
+                    geom_line(data=pwCorrData,aes(x=X,y=Y,linetype=Gene),
+                        colour="#AEAEAE") +
+                    xlab(paste("Reference expression (",rg,")",sep="")) +
+                    ylab("Expression of query genes\n") +
+                    theme_bw() +
                     theme(
                         axis.title.x=element_text(size=12),
                         axis.title.y=element_text(size=12),
@@ -205,10 +205,10 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
                         legend.key=element_blank()
                     )
                 output$correlation <- renderPlot({
-					pwCorrPlot
-				})
-				plotOutput("correlation",height="640px")
-			}
+                    pwCorrPlot
+                })
+                plotOutput("correlation",height="640px")
+            }
             else if (any(is.na(currentCorrelation$corMatrix))) {
                 output$correlation <- renderPlot({
                     currentCorrelation$errorCor
@@ -297,8 +297,8 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
                 nd <- as.dist(0.5*(1-cor(t(mds.obj$points),
                     method=currentCorrelation$opts$method)))
                 currentCorrelation$mdsRsq <- cor(c(d),c(nd))^2
-                gofx <- round(100*mds.obj$GOF[1],1)
-                gofy <- round(100*mds.obj$GOF[2],1)
+                #gofx <- round(100*mds.obj$GOF[1],1)
+                #gofy <- round(100*mds.obj$GOF[2],1)
                 for.ggplot <- data.frame(
                     x=mds.obj$points[,1],
                     y=mds.obj$points[,2],
@@ -309,10 +309,12 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
                 mds <- ggplot() +
                     geom_point(data=for.ggplot,mapping=aes(x=x,y=y,
                         colour=Condition,shape=Condition),size=2) +
-                    xlab(paste("\nPrincipal Coordinate 1 (",gofx,
-                        "% goodness of fit)",sep="")) +
-                    ylab(paste("Principal Coordinate 2 (",gofy,
-                        "% goodness of fit)\n",sep="")) +
+                    #xlab(paste("\nPrincipal Coordinate 1 (",gofx,
+                    #    "% goodness of fit)",sep="")) +
+                    #ylab(paste("Principal Coordinate 2 (",gofy,
+                    #    "% goodness of fit)\n",sep="")) +
+                    xlab("\nPrincipal Coordinate 1") +
+                    ylab("Principal Coordinate 2 (") +
                     theme_bw() +
                     theme(
                         axis.title.x=element_text(size=11),

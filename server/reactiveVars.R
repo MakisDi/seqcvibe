@@ -119,12 +119,12 @@ initReactiveVars <- function() {
     currentHeatmap <- reactiveValues(
         entry=ggmessage("Resulting heatmap will\nbe displayed here"),
         timeout=ggmessage(paste("Clustering operation took too long\nto ",
-			"complete and was aborted.\nConsider lowering the number of genes",
+            "complete and was aborted.\nConsider lowering the number of genes",
             "\nand/or conditions to prevent this.",sep=""),type="error"),
         error=ggmessage(paste("Clustering operation resulted in an error\n ",
-			"most probably because of memory reasons.\nConsider lowering the ",
-			"number of genes\nand/or conditions to prevent this.",sep=""),
-			type="error"),
+            "most probably because of memory reasons.\nConsider lowering the ",
+            "number of genes\nand/or conditions to prevent this.",sep=""),
+            type="error"),
         data=NULL,
         opts=list(
             dendrogram="both",
@@ -141,14 +141,14 @@ initReactiveVars <- function() {
     currentCorrelation <- reactiveValues(
         entryCor=ggmessage("Resulting figures will\nbe displayed here"),
         errorCor=ggmessage(paste("Correlation analysis has failed.\nThe most ",
-			"probable reason is that the\nselected gene set does not show\n",
-			"enough variability to produce a\ncorrelation matrix. Select ",
-			"another gene\nset and try again.",sep=""),type="error"),
+            "probable reason is that the\nselected gene set does not show\n",
+            "enough variability to produce a\ncorrelation matrix. Select ",
+            "another gene\nset and try again.",sep=""),type="error"),
         entryMds=ggmessage("MDS sample will\nbe displayed here",size="small"),
         warnMds=ggmessage("MDS failed! Try\nchanging some parameters.",
-			type="warning",size="small"),
+            type="warning",size="small"),
         errorMds=ggmessage("Error creating MDS!\nSee error on the right",
-			type="error",size="small"),
+            type="error",size="small"),
         corMatrix=NULL,
         datMatrix=NULL,
         mdsRsq=NULL,
@@ -162,24 +162,27 @@ initReactiveVars <- function() {
     )
     
     currentDimRed <- reactiveValues(
-		datMatrix=NULL,
-		mdsObj=NULL,
-		pcaObj=NULL,
-		mdsDist=NULL,
-		mdsRsq=NULL,
-		opts=list(
-			method=NULL,
-			colors=NULL
-		),
-		mdsPlot=ggmessage("Resulting MDS plots will\nbe displayed here"),
-		pcaScreePlot=
-			ggmessage("Resulting PCA scree plots\nwill be displayed here"),
-		pcaScoresPlot=
-			ggmessage("Resulting PCA score plots\nwill be displayed here"),
-		pcaLoadingsPlot=
-			ggmessage("Resulting PCA loadings plots\nwill be displayed here"),
-		pcaBiplotPlot=
-			ggmessage("Resulting PCA biplot plots\nwill be displayed here")
+        datMatrix=NULL,
+        mdsObj=NULL,
+        pcaObj=NULL,
+        mdsGof=list(
+            dist=NULL,
+            rsq=NULL,
+            gof=NULL
+        ),
+        opts=list(
+            method=NULL,
+            colors=NULL
+        ),
+        mdsPlot=ggmessage("Resulting MDS plots will\nbe displayed here"),
+        pcaScreePlot=
+            ggmessage("Resulting PCA scree plots\nwill be displayed here"),
+        pcaScoresPlot=
+            ggmessage("Resulting PCA score plots\nwill be displayed here"),
+        pcaLoadingsPlot=
+            ggmessage("Resulting PCA loadings plots\nwill be displayed here"),
+        pcaBiplotPlot=
+            ggmessage("Resulting PCA biplot plots\nwill be displayed here")
     )
     
     return(list(
@@ -326,7 +329,7 @@ clearReactiveVars <- function(allReactiveVars) {
     )
     
     allReactiveVars$currentHeatmap$entry <- 
-		ggmessage("Resulting heatmap will\nbe displayed here")
+        ggmessage("Resulting heatmap will\nbe displayed here")
     allReactiveVars$currentHeatmap$data <- NULL
     allReactiveVars$currentHeatmap$opts <- list(
         dendrogram="both",
@@ -340,9 +343,9 @@ clearReactiveVars <- function(allReactiveVars) {
     )
     
     allReactiveVars$currentCorrelation$entryCor <-
-		ggmessage("Resulting figures will\nbe displayed here")
+        ggmessage("Resulting figures will\nbe displayed here")
     allReactiveVars$currentCorrelation$entryMds <- 
-		ggmessage("MDS sample will\nbe displayed here",size="small")
+        ggmessage("MDS sample will\nbe displayed here",size="small")
     allReactiveVars$currentCorrelation$corMatrix <- NULL
     allReactiveVars$currentCorrelation$datMatrix <- NULL
     allReactiveVars$currentCorrelation$what <- "samples"
@@ -353,36 +356,36 @@ clearReactiveVars <- function(allReactiveVars) {
     )
         
     allReactiveVars$currentDimRed$mdsPlot <- 
-		ggmessage("Resulting MDS plots will\nbe displayed here")
-	allReactiveVars$currentDimRed$pcaScreePlot <-
-			ggmessage("Resulting PCA scree plots\nwill be displayed here")
-	allReactiveVars$currentDimRed$pcaScoresPlot <-
-			ggmessage("Resulting PCA score plots\nwill be displayed here")
-	allReactiveVars$currentDimRed$pcaLoadingsPlot <-
-			ggmessage("Resulting PCA loadings plots\nwill be displayed here")
-	allReactiveVars$currentDimRed$pcaBiplot <-
-			ggmessage("Resulting PCA biplots plots\nwill be displayed here")
+        ggmessage("Resulting MDS plots will\nbe displayed here")
+    allReactiveVars$currentDimRed$pcaScreePlot <-
+            ggmessage("Resulting PCA scree plots\nwill be displayed here")
+    allReactiveVars$currentDimRed$pcaScoresPlot <-
+            ggmessage("Resulting PCA score plots\nwill be displayed here")
+    allReactiveVars$currentDimRed$pcaLoadingsPlot <-
+            ggmessage("Resulting PCA loadings plots\nwill be displayed here")
+    allReactiveVars$currentDimRed$pcaBiplot <-
+            ggmessage("Resulting PCA biplots plots\nwill be displayed here")
     
     return(allReactiveVars)
 }
 
 ggmessage <- function(msg="",type=c("generic","info","success","warning",
-	"error"),size=c("large","small")) {
-	type <- tolower(type[1])
-	size <- tolower(size[1])
-	switch(type,
-		generic = { color <- "black" },
-		info = { color <- "green2" },
-		success = { color <- "blue2" },
-		warning = { color <- "orange" },
-		error = { color <- "red2" }
-	)
-	switch(size,
-		large = { s <- 10 },
-		small = { s <- 5 }
-	)
-	return(
-		ggplot(data=data.frame(x=1:100,y=1:100)) + 
+    "error"),size=c("large","small")) {
+    type <- tolower(type[1])
+    size <- tolower(size[1])
+    switch(type,
+        generic = { color <- "black" },
+        info = { color <- "green2" },
+        success = { color <- "blue2" },
+        warning = { color <- "orange" },
+        error = { color <- "red2" }
+    )
+    switch(size,
+        large = { s <- 10 },
+        small = { s <- 5 }
+    )
+    return(
+        ggplot(data=data.frame(x=1:100,y=1:100)) + 
             geom_text(data=data.frame(x=50,y=50,label=msg),
                 aes(x=x,y=y,label=label),colour=color,size=s) +
             theme(
@@ -398,8 +401,8 @@ ggmessage <- function(msg="",type=c("generic","info","success","warning",
                 panel.grid.major=element_blank(),
                 panel.grid.minor=element_blank(),
                 plot.background=element_blank()
-			)
-	)
+            )
+    )
 }
 
 ## Messages boilerplate
