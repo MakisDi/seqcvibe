@@ -147,10 +147,10 @@ distFuns <- function() {
             dist(x,method="minkowski")
         },
         pearson=function(x) {
-            as.dist(1-cor(t(x),method="pearson"))
+            as.dist(0.5*(1-cor(t(x),method="pearson")))
         },
         spearman=function(x) {
-            as.dist(1-cor(t(x),method="spearman"))
+            as.dist(0.5*(1-cor(t(x),method="spearman")))
         },
         cosine=function(x) {
             require(lsa)
@@ -158,6 +158,36 @@ distFuns <- function() {
         }
     ))
 }
+
+#distFunsInv <- function() {
+#    return(list(
+#        euclidean=function(x) {
+#            dist(t(x),method="euclidean")
+#        },
+#        maximum=function(x) {
+#            dist(t(x),method="maximum")
+#        },
+#        manhattan=function(x) {
+#            dist(t(x),method="manhattan")
+#        },
+#        #canberra=function(x) {
+#        #    dist(x,method="canberra")
+#        #},
+#        minkowski=function(x) {
+#            dist(t(x),method="minkowski")
+#        },
+#        pearson=function(x) {
+#            as.dist(0.5*(1-cor(x,method="pearson")))
+#        },
+#        spearman=function(x) {
+#            as.dist(0.5*(1-cor(x,method="spearman")))
+#        },
+#        cosine=function(x) {
+#            require(lsa)
+#            as.dist(cosine(x))
+#        }
+#    ))
+#}
 
 hclustFuns <- function() {
     return(list(

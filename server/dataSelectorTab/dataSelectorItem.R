@@ -298,7 +298,7 @@ dataSelectorTabPanelRenderUI <- function(output,session,allReactiveVars,
                         "select all samples from each class."))
                 )
         }
-    }) 
+    })
     
     output$dataCustomSamples <- renderUI({
         s <- input$dataSource

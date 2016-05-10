@@ -163,7 +163,9 @@ initReactiveVars <- function() {
     
     currentDimRed <- reactiveValues(
         datMatrix=NULL,
+        selMatrix=NULL,
         mdsObj=NULL,
+        mdsData=NULL,
         pcaObj=NULL,
         mdsGof=list(
             dist=NULL,
@@ -181,6 +183,9 @@ initReactiveVars <- function() {
             ggmessage("Resulting PCA score plots\nwill be displayed here"),
         pcaLoadingsPlot=
             ggmessage("Resulting PCA loadings plots\nwill be displayed here"),
+        pcaRankedLoadingsPlot=
+            ggmessage(paste("Resulting PCA ranked loadings plots\nwill be ",
+                "displayed here",sep="")),
         pcaBiplotPlot=
             ggmessage("Resulting PCA biplot plots\nwill be displayed here")
     )
@@ -356,17 +361,18 @@ clearReactiveVars <- function(allReactiveVars) {
     )
         
     allReactiveVars$currentDimRed$datMatrix <- NULL
+    allReactiveVars$currentDimRed$selMatrix <- NULL
     allReactiveVars$currentDimRed$mdsObj <- NULL
     allReactiveVars$currentDimRed$pcaObj <- NULL
     allReactiveVars$currentDimRed$mdsGog <- list(
-		dist=NULL,
-		rsq=NULL,
-		gof=NULL
-	)
-	allReactiveVars$currentDimRed$opts <- list(
-		method=NULL,
-		colors=NULL
-	)
+        dist=NULL,
+        rsq=NULL,
+        gof=NULL
+    )
+    allReactiveVars$currentDimRed$opts <- list(
+        method=NULL,
+        colors=NULL
+    )
     allReactiveVars$currentDimRed$mdsPlot <- 
         ggmessage("Resulting MDS plots will\nbe displayed here")
     allReactiveVars$currentDimRed$pcaScreePlot <-
@@ -375,6 +381,9 @@ clearReactiveVars <- function(allReactiveVars) {
             ggmessage("Resulting PCA score plots\nwill be displayed here")
     allReactiveVars$currentDimRed$pcaLoadingsPlot <-
             ggmessage("Resulting PCA loadings plots\nwill be displayed here")
+    allReactiveVars$currentDimRed$pcaRankedLoadingsPlot <-
+            ggmessage(paste("Resulting PCA ranked loadings plots\nwill be ",
+                "displayed here",sep=""))
     allReactiveVars$currentDimRed$pcaBiplot <-
             ggmessage("Resulting PCA biplots plots\nwill be displayed here")
     

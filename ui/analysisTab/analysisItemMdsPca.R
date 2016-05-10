@@ -194,7 +194,16 @@ mdsPcaTabPanel <- function() {
                     id="rnaDimRedMdsPlots",
                     tabPanel(
                         title="Eigenvectors",
-                        plotOutput("rnaMdsPlot",height="640px")
+                        plotOutput(
+                            outputId="rnaMdsPlot",
+                            click="rnaMdsPlotClick",
+                            #dblclick="rnaMdsPlotDblClick",
+                            brush=brushOpts(
+                                id="rnaMdsPlotBrush",
+                                resetOnNew=TRUE
+                            ),
+                            height="640px"
+                        )
                     )
                 )
             ),
@@ -211,8 +220,12 @@ mdsPcaTabPanel <- function() {
                         plotOutput("rnaPcaScoresPlot",height="640px")
                     ),
                     tabPanel(
-                        title="Loadings",
+                        title="Loadings 2D",
                         plotOutput("rnaPcaLoadingsPlot",height="640px")
+                    ),
+                    tabPanel(
+                        title="Loadings 1D",
+                        plotOutput("rnaPcaRankedLoadingsPlot",height="640px")
                     ),
                     tabPanel(
                         title="Biplot",

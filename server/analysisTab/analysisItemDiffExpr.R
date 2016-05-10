@@ -355,7 +355,7 @@ diffExprTabPanelReactive <- function(input,output,session,
                         xvar="A",yvar="M",allRows=TRUE)
                 selbr <- which(tabBrush$selected_)
                 if (length(selbr)>0)
-                    g <- rownames(tabClick[selbr,])
+                    g <- rownames(tabBrush[selbr,])
                 
                 if (isEmpty(g))
                     return()
@@ -898,7 +898,7 @@ diffExprTabPanelReactive <- function(input,output,session,
     updateMaPlotColours <- reactive({
         macs <- isolate(maPlots$maColours)
         if (is.null(names(macs)))
-			names(macs) <- c("Up","Down","Neutral")
+            names(macs) <- c("Up","Down","Neutral")
         lapply(names(macs),function(x) {
             observeEvent(input[[paste("maPlotColour_",x,sep="")]],{
                 newc <- input[[paste("maPlotColour_",x,sep="")]]
@@ -1266,9 +1266,9 @@ diffExprTabPanelRenderUI <- function(output,session,allReactiveVars,
     output$maPlotColours <- renderUI({
         c <- maPlots$maColours
         if (is.null(names(c)))
-			names(c) <- c("Up","Down","Neutral")
+            names(c) <- c("Up","Down","Neutral")
         lapply(names(c),function(x,c) {
-			colourInput(
+            colourInput(
                 inputId=paste("maPlotColour_",x,sep=""),
                 label=paste(x,"colour"),
                 value=c[[x]]
