@@ -166,6 +166,8 @@ initReactiveVars <- function() {
         selMatrix=NULL,
         mdsObj=NULL,
         mdsData=NULL,
+        pcaScoresData=NULL,
+        pcaLoadingsData=NULL,
         pcaObj=NULL,
         mdsGof=list(
             dist=NULL,
@@ -364,7 +366,10 @@ clearReactiveVars <- function(allReactiveVars) {
     allReactiveVars$currentDimRed$selMatrix <- NULL
     allReactiveVars$currentDimRed$mdsObj <- NULL
     allReactiveVars$currentDimRed$pcaObj <- NULL
-    allReactiveVars$currentDimRed$mdsGog <- list(
+    allReactiveVars$currentDimRed$mdsData <- NULL
+    allReactiveVars$currentDimRed$pcaScoresData <- NULL
+    allReactiveVars$currentDimRed$pcaLoadingsData <- NULL
+    allReactiveVars$currentDimRed$mdsGof <- list(
         dist=NULL,
         rsq=NULL,
         gof=NULL

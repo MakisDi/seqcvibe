@@ -217,15 +217,42 @@ mdsPcaTabPanel <- function() {
                     ),
                     tabPanel(
                         title="Scores",
-                        plotOutput("rnaPcaScoresPlot",height="640px")
+                        plotOutput(
+                            outputId="rnaPcaScoresPlot",
+                            click="rnaPcaScoresPlotClick",
+                            #dblclick="rnaPcaScoresPlotDblClick",
+                            brush=brushOpts(
+                                id="rnaPcaScoresPlotBrush",
+                                resetOnNew=TRUE
+                            ),
+                            height="640px"
+                        )
                     ),
                     tabPanel(
                         title="Loadings 2D",
-                        plotOutput("rnaPcaLoadingsPlot",height="640px")
+                        plotOutput(
+                            outputId="rnaPcaLoadingsPlot",
+                            click="rnaPcaLoadingsPlotClick",
+                            #dblclick="rnaPcaLoadingsPlotDblClick",
+                            brush=brushOpts(
+                                id="rnaPcaLoadingsPlotBrush",
+                                resetOnNew=TRUE
+                            ),
+                            height="640px"
+                        )
                     ),
                     tabPanel(
                         title="Loadings 1D",
-                        plotOutput("rnaPcaRankedLoadingsPlot",height="640px")
+                        plotOutput(
+                            outputId="rnaPcaRankedLoadingsPlot",
+                            click="rnaPcaRankedLoadingsPlotClick",
+                            #dblclick="rnaPcaScoresPlotDblClick",
+                            brush=brushOpts(
+                                id="rnaPcaRankedLoadingsPlotBrush",
+                                resetOnNew=TRUE
+                            ),
+                            height="640px"
+                        )
                     ),
                     tabPanel(
                         title="Biplot",
