@@ -174,12 +174,36 @@ mdsPcaTabPanel <- function() {
                 ),
                 div(
                     style="font-weight:bold;margin-top:10px;",
-                    "Custom regions"
+                    "Point names in plot"
                 ),
                 checkboxInput(
                     inputId="rnaMdsPcaTogglePointNames",
-                    label="Toggle sample names",
+                    label="Toggle point names",
                     value=FALSE
+                ),
+                htmlOutput("helpTooManyRnaMdsPcaGeneNames"),
+                checkboxInput(
+                    inputId="rnaMdsPcaToggleGeneSearch",
+                    label="Select specific genes*",
+                    value=FALSE
+                ),
+                conditionalPanel(
+                    condition=
+                        "input.rnaMdsPcaToggleGeneSearch",
+                    selectizeInput(
+                        inputId="rnaMdsPcaSearchGeneNames",
+                        label="Select genes to highlight" ,
+                        multiple=TRUE,
+                        choices=NULL,
+                        options=list(
+                            placeholder="Type some gene names",
+                            selectOnTab=TRUE
+                        )
+                    )
+                ),
+                div(
+                    class="small",
+                    helpText("*Only for PCA loadings plots")
                 )
             )),
             fluidRow(column(12,

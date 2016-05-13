@@ -438,7 +438,7 @@ mdsPcaTabPanelReactive <- function(input,output,session,
             }
             pcaLoadings <- ggplot() +
                 geom_point(data=for.ggplot,mapping=aes(x=x,y=y),
-                    colour="deepskyblue4",size=psize) +
+                    colour="deepskyblue",size=psize) +
                 xlab(paste("\nPrincipal Component ",i," (",pvarx,
                     "% of variance explained)",sep="")) +
                 ylab(paste("Principal Component ",j," (",pvary,
@@ -454,12 +454,168 @@ mdsPcaTabPanelReactive <- function(input,output,session,
                     legend.key=element_blank()
                 )
             if (input$rnaMdsPcaTogglePointNames) {
-                require(ggrepel)
+                if (nrow(for.ggplot)>1000)
+                    currentDimRed$tooManyGenes <- TRUE
+                else {
+                    currentDimRed$tooManyGenes <- FALSE 
+                    require(ggrepel)
+                    pcaLoadings <- pcaLoadings +
+                        geom_text_repel(data=for.ggplot,mapping=aes(x=x,y=y,
+                            label=labs),size=tsize)
+                }
+            }
+            else
+                currentDimRed$tooManyGenes <- FALSE
+            if (input$rnaMdsPcaToggleGeneSearch 
+                && !is.null(input$rnaMdsPcaSearchGeneNames)) {
                 pcaLoadings <- pcaLoadings +
-                    geom_text_repel(data=for.ggplot,mapping=aes(x=x,y=y,
-                        label=labs),size=tsize)
+                    geom_point(data=for.ggplot[input$rnaMdsPcaSearchGeneNames,],
+                        mapping=aes(x=x,y=y),colour="red2",size=4.5)
             }
             currentDimRed$pcaLoadingsPlot <- pcaLoadings
+        }
+    })
+    
+    updatePcaRankedLoadingsPlot <- reactive({
+        pca.obj <- currentDimRed$pcaObj
+        if (is.null(pca.obj))
+            return()
+        i <- as.numeric(input$rnaDimRedXAxis)
+        if (!is.na(i)) {
+            labs <- loadedGenomes[[currentMetadata$genome]]$dbGene[
+                rownames(pca.obj$rotation)]$gene_name
+            pvarx <- round(100*pca.obj$sdev[i]^2/sum(pca.obj$sdev^2),1)
+            y <- pca.obj$rotation[,i]
+            y <- sort(y,index.return=TRUE)
+            for.ggplot <- data.frame(
+                x=1:length(y$x),
+                y=y$x,
+                labs=labs[y$ix]
+            )
+            rownames(for.ggplot) <- rownames(pca.obj$rotation)[y$ix]
+            currentDimRed$pcaRankedLoadingsData <- for.ggplot
+            if (nrow(for.ggplot)<=100) {
+                psize <- 2.5
+                tsize <- 3.5
+            }
+            else {
+                psize <- 1.5
+                tsize <- 2.5
+            }
+            pcaRankedLoadings <- ggplot() +
+                geom_point(data=for.ggplot,mapping=aes(x=x,y=y),
+                    colour="deepskyblue",size=psize) +
+                xlab(paste("\nPrincipal Component ",i," (",pvarx,
+                    "% of variance explained)",sep="")) +
+                ylab("Ranked loadings") +
+                theme_bw() +
+                theme(
+                    axis.title.x=element_text(size=14),
+                    axis.title.y=element_text(size=14),
+                    axis.text.x=element_text(size=12,face="bold"),
+                    axis.text.y=element_text(size=12,face="bold"),
+                    legend.position="bottom",
+                    legend.text=element_text(size=14),
+                    legend.key=element_blank()
+                )
+            if (input$rnaMdsPcaTogglePointNames) {
+                if (nrow(for.ggplot)>1000)
+                    currentDimRed$tooManyGenes <- TRUE
+                else {
+                    currentDimRed$tooManyGenes <- FALSE
+                    require(ggrepel)
+                    pcaRankedLoadings <- pcaRankedLoadings +
+                        geom_text_repel(data=for.ggplot,mapping=aes(x=x,y=y,
+                            label=labs),size=tsize)
+                }
+            }
+            else
+                currentDimRed$tooManyGenes <- FALSE
+            if (input$rnaMdsPcaToggleGeneSearch 
+                && !is.null(input$rnaMdsPcaSearchGeneNames)) {
+                pcaRankedLoadings <- pcaRankedLoadings +
+                    geom_point(data=for.ggplot[input$rnaMdsPcaSearchGeneNames,],
+                        mapping=aes(x=x,y=y),colour="red2",size=4.5)
+            }
+            currentDimRed$pcaRankedLoadingsPlot <- pcaRankedLoadings
+        }
+    })
+    
+    updatePcaBiplotPlot <- reactive({
+        pca.obj <- currentDimRed$pcaObj
+        if (is.null(pca.obj))
+            return()
+        cc <- unique(as.character(currentMetadata$final$class))
+        classList <- vector("list",length(cc))
+        names(classList) <- cc
+        for (cl in cc)
+            classList[[cl]] <- 
+                as.character(
+                    currentMetadata$final$sample_id[which(
+                        currentMetadata$final$class==cl)])
+        classes <- as.factor(rep(names(classList),lengths(classList)))
+        i <- as.numeric(input$rnaDimRedXAxis)
+        j <- as.numeric(input$rnaDimRedYAxis)
+        if (!is.na(i) && !is.na(j)) {
+            pvarx <- round(100*pca.obj$sdev[i]^2/sum(pca.obj$sdev^2),1)
+            pvary <- round(100*pca.obj$sdev[j]^2/sum(pca.obj$sdev^2),1)
+            #for.ggplot <- data.frame(
+            #    x=pca.obj$x[,i],
+            #    y=pca.obj$x[,j],
+            #    Condition=classes
+            #)
+            #rownames(for.ggplot) <- rownames(pca.obj$x)
+            #currentDimRed$pcaScoresData <- for.ggplot
+            classColors <- currentDimRed$opts$colors
+            names(classColors) <- cc
+            #if (nrow(for.ggplot)<=100) {
+            #    psize <- 3
+            #    tsize <- 4
+            #}
+            #else {
+            #    psize <- 2
+            #    tsize <- 3
+            #}
+            
+            pcaBiplot <- ggbiplot(
+                pcobj=pca.obj,
+                choices=c(i,j),
+                #groups=classes,
+                ellipse=TRUE
+            )
+                
+            pcaBiplot <- pcaBiplot + 
+                xlab(paste("\nPrincipal Component ",i," (",pvarx,
+                    "% of variance explained)",sep="")) +
+                ylab(paste("Principal Component ",j," (",pvary,
+                    "% of variance explained)\n",sep="")) +
+                theme_bw() +
+                theme(
+                    axis.title.x=element_text(size=14),
+                    axis.title.y=element_text(size=14),
+                    axis.text.x=element_text(size=12,face="bold"),
+                    axis.text.y=element_text(size=12,face="bold"),
+                    legend.position="bottom",
+                    legend.text=element_text(size=14),
+                    legend.key=element_blank()
+                ) +
+                scale_color_manual(values=classColors) +
+                scale_fill_manual(values=classColors)
+            #if (input$rnaMdsPcaTogglePointNames) {
+            #    require(ggrepel)
+            #    labs <- rownames(for.ggplot)
+            #    if (!is.null(currentMetadata$final$alt_id)) {
+            #        alt_id <- as.character(currentMetadata$final$alt_id)
+            #        names(alt_id) <- 
+            #            as.character(currentMetadata$final$sample_id)
+            #        # TCGA names hack
+            #        labs <- gsub("\\.","-",alt_id[rownames(for.ggplot)])
+            #    }
+            #    pcaBiplot <- pcaBiplot +
+            #        geom_text_repel(data=for.ggplot,mapping=aes(x=x,y=y,
+            #            label=labs),size=tsize)
+            #}
+            currentDimRed$pcaBiplotPlot <- pcaBiplot
         }
     })
     
@@ -492,25 +648,68 @@ mdsPcaTabPanelReactive <- function(input,output,session,
         if (is.null(currentDimRed$pcaLoadingsData))
             return()
         ro <- NULL
-        # If from click
-        tabClick <- 
-            nearPoints(currentDimRed$pcaLoadingsData,
-                input$rnaPcaLoadingsPlotClick,xvar="x",yvar="y",allRows=TRUE)
-        selcl <- which(tabClick$selected_)
-        if (length(selcl)>0)
-            ro <- rownames(tabClick[selcl,])
-        
-        # If from brush
-        tabBrush <- 
-            brushedPoints(currentDimRed$pcaLoadingsData,
-                input$rnaPcaLoadingsPlotBrush,xvar="x",yvar="y",allRows=TRUE)
-        selbr <- which(tabBrush$selected_)
-        if (length(selbr)>0)
-            ro <- rownames(tabBrush[selbr,])
+        if (input$rnaMdsPcaToggleGeneSearch 
+                && !is.null(input$rnaMdsPcaSearchGeneNames)) {
+            ro <- input$rnaMdsPcaSearchGeneNames
+        }
+        else {
+            # If from click
+            tabClick <- 
+                nearPoints(currentDimRed$pcaLoadingsData,
+                    input$rnaPcaLoadingsPlotClick,xvar="x",yvar="y",
+                        allRows=TRUE)
+            selcl <- which(tabClick$selected_)
+            if (length(selcl)>0)
+                ro <- rownames(tabClick[selcl,])
+            
+            # If from brush
+            tabBrush <- 
+                brushedPoints(currentDimRed$pcaLoadingsData,
+                    input$rnaPcaLoadingsPlotBrush,xvar="x",yvar="y",
+                        allRows=TRUE)
+            selbr <- which(tabBrush$selected_)
+            if (length(selbr)>0)
+                ro <- rownames(tabBrush[selbr,])
+        }
         if (isEmpty(ro))
             currentDimRed$selMatrix <- currentDimRed$datMatrix
         else
-            currentDimRed$selMatrix <- currentDimRed$datMatrix[ro,,drop=FALSE]
+            currentDimRed$selMatrix <- 
+                currentDimRed$datMatrix[ro,,drop=FALSE]
+    })
+    
+    updatePcaRankedLoadingsTable <- reactive({
+        if (is.null(currentDimRed$pcaRankedLoadingsData))
+            return()
+        ro <- NULL
+        if (input$rnaMdsPcaToggleGeneSearch 
+                && !is.null(input$rnaMdsPcaSearchGeneNames)) {
+            ro <- input$rnaMdsPcaSearchGeneNames
+        }
+        else {
+            # If from click
+            tabClick <- 
+                nearPoints(currentDimRed$pcaRankedLoadingsData,
+                    input$rnaPcaRankedLoadingsPlotClick,xvar="x",yvar="y",
+                        allRows=TRUE)
+            selcl <- which(tabClick$selected_)
+            if (length(selcl)>0)
+                ro <- rownames(tabClick[selcl,])
+            
+            # If from brush
+            tabBrush <- 
+                brushedPoints(currentDimRed$pcaRankedLoadingsData,
+                    input$rnaPcaRankedLoadingsPlotBrush,xvar="x",yvar="y",
+                        allRows=TRUE)
+            selbr <- which(tabBrush$selected_)
+            if (length(selbr)>0)
+                ro <- rownames(tabBrush[selbr,])
+        }
+        if (isEmpty(ro))
+            currentDimRed$selMatrix <- currentDimRed$datMatrix
+        else
+            currentDimRed$selMatrix <- 
+                currentDimRed$datMatrix[ro,,drop=FALSE]
     })
     
     handleRnaMdsPcaSelection <- reactive({
@@ -578,8 +777,11 @@ mdsPcaTabPanelReactive <- function(input,output,session,
         updatePcaScreePlot=updatePcaScreePlot,
         updatePcaScoresPlot=updatePcaScoresPlot,
         updatePcaLoadingsPlot=updatePcaLoadingsPlot,
+        updatePcaRankedLoadingsPlot=updatePcaRankedLoadingsPlot,
+        updatePcaBiplotPlot=updatePcaBiplotPlot,
         updatePcaScoresTable=updatePcaScoresTable,
         updatePcaLoadingsTable=updatePcaLoadingsTable,
+        updatePcaRankedLoadingsTable=updatePcaRankedLoadingsTable,
         handleRnaMdsPcaSelection=handleRnaMdsPcaSelection,
         handleRnaMdsPcaDownload=handleRnaMdsPcaDownload
     ))
@@ -731,12 +933,24 @@ mdsPcaTabPanelRenderUI <- function(output,session,allReactiveVars,
     output$rnaPcaBiplotPlot <- renderPlot({
         currentDimRed$pcaBiplotPlot
     })
+    
+    output$helpTooManyRnaMdsPcaGeneNames <- renderUI({
+        if (currentDimRed$tooManyGenes)
+            list(
+                helpText(paste("Point name plotting suppressed due to too ",
+                    "many points present on the plot. Please use other ",
+                    "filters to check for specific genes"))
+            )
+        else 
+            list(div())
+    })
 }
 
 mdsPcaTabPanelObserve <- function(input,output,session,
     allReactiveVars,allReactiveMsgs) {
     currentMetadata <- allReactiveVars$currentMetadata
     currentDimRed <- allReactiveVars$currentDimRed
+    customRnaRegions <- allReactiveVars$customRnaRegions
     
     mdsPcaTabPanelReactiveEvents <- 
         mdsPcaTabPanelEventReactive(input,output,session,
@@ -755,8 +969,13 @@ mdsPcaTabPanelObserve <- function(input,output,session,
     updatePcaScreePlot <- mdsPcaTabPanelReactiveExprs$updatePcaScreePlot
     updatePcaScoresPlot <- mdsPcaTabPanelReactiveExprs$updatePcaScoresPlot
     updatePcaLoadingsPlot <- mdsPcaTabPanelReactiveExprs$updatePcaLoadingsPlot
+    updatePcaRankedLoadingsPlot <- 
+        mdsPcaTabPanelReactiveExprs$updatePcaRankedLoadingsPlot
+    updatePcaBiplotPlot <- mdsPcaTabPanelReactiveExprs$updatePcaBiplotPlot
     updatePcaScoresTable <- mdsPcaTabPanelReactiveExprs$updatePcaScoresTable
     updatePcaLoadingsTable <- mdsPcaTabPanelReactiveExprs$updatePcaLoadingsTable
+    updatePcaRankedLoadingsTable <- 
+        mdsPcaTabPanelReactiveExprs$updatePcaRankedLoadingsTable
     handleRnaMdsPcaSelection <- 
         mdsPcaTabPanelReactiveExprs$handleRnaMdsPcaSelection
     handleRnaMdsPcaDownload <- 
@@ -775,7 +994,7 @@ mdsPcaTabPanelObserve <- function(input,output,session,
             )
         else {
             geneNames <- loadedGenomes[[currentMetadata$genome]]$geneNames
-            g <- isolate({input$selectCorrelationGeneName})
+            g <- isolate({input$selectMdsPcaGeneName})
             i <- grep(paste0("^",g),geneNames,perl=TRUE)
             if (length(i)>0) {
                 updateSelectizeInput(session,"selectMdsPcaGeneName",
@@ -783,6 +1002,34 @@ mdsPcaTabPanelObserve <- function(input,output,session,
                     selected=g,
                     server=TRUE
                 )
+            }
+        }
+    })
+    
+    observe({
+        s <- currentMetadata$source
+        d <- currentMetadata$dataset
+        if (is.null(currentMetadata$final) || is.null(currentDimRed$datMatrix))
+            updateSelectizeInput(session,"rnaMdsPcaSearchGeneNames",
+                choices=NULL,
+                server=TRUE
+            )
+        else {
+            if (!is.null(currentDimRed$datMatrix)) {
+                G <- rownames(currentDimRed$datMatrix)
+                nG <- loadedGenomes[[currentMetadata$genome]]$dbGene[
+                    G]$gene_name
+                nG <- as.character(nG)
+                names(G) <- nG
+                g <- isolate({input$rnaMdsPcaSearchGeneNames})
+                i <- grep(paste0("^",g),nG,perl=TRUE)
+                if (length(i)>0) {
+                    updateSelectizeInput(session,"rnaMdsPcaSearchGeneNames",
+                        choices=G[i],
+                        selected=g,
+                        server=TRUE
+                    )
+                }
             }
         }
     })
@@ -835,8 +1082,11 @@ mdsPcaTabPanelObserve <- function(input,output,session,
         updatePcaScreePlot()
         updatePcaScoresPlot()
         updatePcaLoadingsPlot()
+        updatePcaRankedLoadingsPlot()
+        updatePcaBiplotPlot()
         updatePcaScoresTable()
         updatePcaLoadingsTable()
+        updatePcaRankedLoadingsTable()
         handleRnaMdsPcaSelection()
         handleRnaMdsPcaDownload()
     })

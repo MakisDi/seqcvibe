@@ -168,6 +168,7 @@ initReactiveVars <- function() {
         mdsData=NULL,
         pcaScoresData=NULL,
         pcaLoadingsData=NULL,
+        pcaRankedLoadingsData=NULL,
         pcaObj=NULL,
         mdsGof=list(
             dist=NULL,
@@ -189,7 +190,8 @@ initReactiveVars <- function() {
             ggmessage(paste("Resulting PCA ranked loadings plots\nwill be ",
                 "displayed here",sep="")),
         pcaBiplotPlot=
-            ggmessage("Resulting PCA biplot plots\nwill be displayed here")
+            ggmessage("Resulting PCA biplot plots\nwill be displayed here"),
+        tooManyGenes=FALSE # Safety trigger for plotting names with ggrepel
     )
     
     return(list(
@@ -369,6 +371,7 @@ clearReactiveVars <- function(allReactiveVars) {
     allReactiveVars$currentDimRed$mdsData <- NULL
     allReactiveVars$currentDimRed$pcaScoresData <- NULL
     allReactiveVars$currentDimRed$pcaLoadingsData <- NULL
+    allReactiveVars$currentDimRed$pcaLoadingsData <- NULL
     allReactiveVars$currentDimRed$mdsGof <- list(
         dist=NULL,
         rsq=NULL,
@@ -391,6 +394,7 @@ clearReactiveVars <- function(allReactiveVars) {
                 "displayed here",sep=""))
     allReactiveVars$currentDimRed$pcaBiplot <-
             ggmessage("Resulting PCA biplots plots\nwill be displayed here")
+    allReactiveVars$currentDimRed$tooManyGenes <- FALSE
     
     return(allReactiveVars)
 }

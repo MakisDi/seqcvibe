@@ -156,6 +156,7 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
             plotOutput("correlation",height="640px")
         }
         else {
+            require(reshape)
             if (!is.null(currentCorrelation$refGene)) {
                 s <- currentMetadata$source
                 d <- currentMetadata$dataset
@@ -165,49 +166,55 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
                 x <- D[r,]
                 D <- D[setdiff(rownames(D),r),]
                 
-                gNames <- as.character(loadedGenomes[[
-                    currentMetadata$genome]]$dbGene[
-                        rownames(D)]$gene_name)
-                rg <- as.character(loadedGenomes[[
-                    currentMetadata$genome]]$dbGene[r]$gene_name)
-                rownames(D) <- gNames
-                melted <- melt(t(D))
-                
-                X <- rep(x,nrow(D))
-                Y <- as.numeric(melted$value)
-                X <- X/max(c(X,Y))
-                Y <- Y/max(c(X,Y))
-                
-                pwCorrData <- data.frame(
-                    X=X,
-                    Y=Y,
-                    Gene=melted$X2,
-                    Condition=rep(cc,nrow(D))
-                )
-                
-                pwCorrPlot <- ggplot() +
-                    geom_point(data=pwCorrData,aes(x=X,y=Y,
-                        colour=Condition,fill=Condition,shape=Gene),
-                        size=2) +
-                    geom_line(data=pwCorrData,aes(x=X,y=Y,linetype=Gene),
-                        colour="#AEAEAE") +
-                    xlab(paste("Reference expression (",rg,")",sep="")) +
-                    ylab("Expression of query genes\n") +
-                    theme_bw() +
-                    theme(
-                        axis.title.x=element_text(size=12),
-                        axis.title.y=element_text(size=12),
-                        axis.text.x=element_text(size=10,face="bold"),
-                        axis.text.y=element_text(size=10,face="bold"),
-                        legend.position="bottom",
-                        legend.title=element_text(size=11,face="bold"),
-                        legend.text=element_text(size=10),
-                        legend.key=element_blank()
+                if (nrow(D)>1000)
+                    pwCorrPlot <- ggmessage(paste("Cannot create gene-wise",
+                        "correlation plot with more than 1000 genes"),
+                        type="error")
+                else {
+                    gNames <- as.character(loadedGenomes[[
+                        currentMetadata$genome]]$dbGene[
+                            rownames(D)]$gene_name)
+                    rg <- as.character(loadedGenomes[[
+                        currentMetadata$genome]]$dbGene[r]$gene_name)
+                    rownames(D) <- gNames
+                    melted <- melt(t(D))
+                    
+                    X <- rep(x,nrow(D))
+                    Y <- as.numeric(melted$value)
+                    X <- X/max(c(X,Y))
+                    Y <- Y/max(c(X,Y))
+                    
+                    pwCorrData <- data.frame(
+                        X=X,
+                        Y=Y,
+                        Gene=melted$X2,
+                        Condition=rep(cc,nrow(D))
                     )
-                output$correlation <- renderPlot({
-                    pwCorrPlot
-                })
-                plotOutput("correlation",height="640px")
+                    
+                    pwCorrPlot <- ggplot() +
+                        geom_point(data=pwCorrData,aes(x=X,y=Y,
+                            colour=Condition,fill=Condition,shape=Gene),
+                            size=2) +
+                        geom_line(data=pwCorrData,aes(x=X,y=Y,linetype=Gene),
+                            colour="#AEAEAE") +
+                        xlab(paste("Reference expression (",rg,")",sep="")) +
+                        ylab("Expression of query genes\n") +
+                        theme_bw() +
+                        theme(
+                            axis.title.x=element_text(size=12),
+                            axis.title.y=element_text(size=12),
+                            axis.text.x=element_text(size=10,face="bold"),
+                            axis.text.y=element_text(size=10,face="bold"),
+                            legend.position="bottom",
+                            legend.title=element_text(size=11,face="bold"),
+                            legend.text=element_text(size=10),
+                            legend.key=element_blank()
+                        )
+                    output$correlation <- renderPlot({
+                        pwCorrPlot
+                    })
+                    plotOutput("correlation",height="640px")
+                }
             }
             else if (any(is.na(currentCorrelation$corMatrix))) {
                 output$correlation <- renderPlot({
@@ -314,7 +321,7 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
                     #ylab(paste("Principal Coordinate 2 (",gofy,
                     #    "% goodness of fit)\n",sep="")) +
                     xlab("\nPrincipal Coordinate 1") +
-                    ylab("Principal Coordinate 2 (") +
+                    ylab("Principal Coordinate 2") +
                     theme_bw() +
                     theme(
                         axis.title.x=element_text(size=11),
