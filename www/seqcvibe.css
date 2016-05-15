@@ -1,3 +1,28 @@
+.fullscreen {
+    background-color: #F6F6F6;
+    width: 100%;
+    height: auto;
+    bottom: 0px;
+    top: 0px;
+    left: 0;
+    position: absolute;
+}
+
+.splash {
+    position: absolute;
+    width: 400px;
+    height: 200px;
+    top: 50%;
+    left: 50%;
+    margin-left: -200px; /* margin is -0.5 * dimension */
+    margin-top: -100px;
+    text-align: center;
+    line-height: 180px;
+    color: #007CFF;
+    font-family: "Arial Narrow", Arial, sans-serif;
+    font-size: 3em;
+}​
+
 .btn-sample-select {
     background: #6F6F6F;
     color: #FFFFFF;

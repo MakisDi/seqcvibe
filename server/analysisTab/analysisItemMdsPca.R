@@ -45,14 +45,15 @@ mdsPcaTabPanelEventReactive <- function(input,output,session,
             expr = {
                 if (is.null(currentPipelineOutput$counts)) {
                     output$rnaMdsPcaSettingsError <- renderUI({
-                        div(class="error-message",paste("You must create a ",
-                            "dataset first!",sep=""))
+                        div(class="error-message",paste("You must execute a ",
+                            "differential expression analysis first!",sep=""))
                     })
                     return()
                 }
                 else {
                     output$rnaMdsPcaSettingsError <- renderUI({div()})
-                    # Code to select the genes
+                    g <- names(which(apply(currentPipelineOutput$flags,1,
+						function(x) all(x==0))))
                 }
             },
             all = {
@@ -545,45 +546,104 @@ mdsPcaTabPanelReactive <- function(input,output,session,
         pca.obj <- currentDimRed$pcaObj
         if (is.null(pca.obj))
             return()
+        require(scales)
+        require(plyr)
         cc <- unique(as.character(currentMetadata$final$class))
         classList <- vector("list",length(cc))
         names(classList) <- cc
         for (cl in cc)
-            classList[[cl]] <- 
-                as.character(
-                    currentMetadata$final$sample_id[which(
-                        currentMetadata$final$class==cl)])
+            classList[[cl]] <- as.character(
+                currentMetadata$final$sample_id[which(
+                    currentMetadata$final$class==cl)])
         classes <- as.factor(rep(names(classList),lengths(classList)))
+        labs <- loadedGenomes[[currentMetadata$genome]]$dbGene[
+            rownames(pca.obj$rotation)]$gene_name
+        #rownames(pca.obj$rotation) <- abbreviate(labs)
         i <- as.numeric(input$rnaDimRedXAxis)
         j <- as.numeric(input$rnaDimRedYAxis)
         if (!is.na(i) && !is.na(j)) {
+			obs.scale <- 0
+			var.scale <- 1
+			circle.prob <- 0.69
+			ellipse.prob=0.68
+			varname.size <- 3
+			varname.adjust <- 1.5
+            nobs.factor <- sqrt(nrow(pca.obj$x) - 1)
+			d <- pca.obj$sdev
+			u <- sweep(pca.obj$x,2,1/(d*nobs.factor),FUN = '*')
+			v <- pca.obj$rotation
+            choices <- c(i,j)
             pvarx <- round(100*pca.obj$sdev[i]^2/sum(pca.obj$sdev^2),1)
             pvary <- round(100*pca.obj$sdev[j]^2/sum(pca.obj$sdev^2),1)
-            #for.ggplot <- data.frame(
-            #    x=pca.obj$x[,i],
-            #    y=pca.obj$x[,j],
-            #    Condition=classes
-            #)
-            #rownames(for.ggplot) <- rownames(pca.obj$x)
-            #currentDimRed$pcaScoresData <- for.ggplot
+            
+            # Scores
+            df.s <- as.data.frame(sweep(u[,choices],2,d[choices]^obs.scale,
+				FUN='*'))
+			df.s <- df.s*nobs.factor
+			rownames(df.s) <- rownames(pca.obj$x)
+			# Directions
+			v <- sweep(v,2,d^var.scale,FUN='*')
+			df.d <- as.data.frame(v[,choices])
+			# Names as with other PCA plots
+			names(df.s) <- c('x','y')
+			names(df.d) <- names(df.s)
+            
+            # Scale the radius of the correlation circle so that it corresponds 
+            # to a data ellipse for the standardized PC scores
+			r <- sqrt(qchisq(circle.prob,df=2))*prod(colMeans(df.s^2))^(1/4)
+
+			# Scale directions
+			v.scale <- rowSums(v^2)
+			df.d <- r*df.d/sqrt(max(v.scale))
+			
+			# Score/class labels
+			df.s$Condition <- classes
+			
+			# Variable/loadings names
+			df.d$Genes <- labs
+			# Variables for text label placement
+			df.d$angle <- with(df.d,(180/pi)*atan(y/x))
+			df.d$hjust <- with(df.d,(1-varname.adjust*sign(x))/2)
+    
             classColors <- currentDimRed$opts$colors
             names(classColors) <- cc
-            #if (nrow(for.ggplot)<=100) {
-            #    psize <- 3
-            #    tsize <- 4
-            #}
-            #else {
-            #    psize <- 2
-            #    tsize <- 3
-            #}
+            if (nrow(df.s)<=100) {
+                psize <- 3
+                tsize <- 4
+            }
+            else {
+                psize <- 2
+                tsize <- 3
+            }
+            # Base plot
+            theta.c <- c(seq(-pi,pi,length=50),seq(pi,-pi,length=50))
+			circle.c <- data.frame(x=r*cos(theta.c),y=r*sin(theta.c))
+			pcaBiplot <- ggplot() +
+				geom_point(data=df.s,mapping=aes(x=x,y=y,color=Condition),
+					size=psize) + 
+				geom_path(data=circle.c,aes(x=x,y=y),color="black",
+					size=1/2,alpha=1/3) +
+				geom_segment(data=df.d,aes(x=0,y=0,xend=x,yend=y),
+					arrow=arrow(length=unit(1/2,'picas')),color=muted('red'))
             
-            pcaBiplot <- ggbiplot(
-                pcobj=pca.obj,
-                choices=c(i,j),
-                #groups=classes,
-                ellipse=TRUE
-            )
-                
+            # Ellipse
+            theta.e <- c(seq(-pi,pi,length=50),seq(pi,-pi,length=50))
+			circle.e <- cbind(cos(theta.e),sin(theta.e))
+            ell <- ddply(df.s,'Condition',function(x) {
+				if(nrow(x)<=2) return(NULL)
+				sigma <- var(cbind(x$x,x$y))
+				mu <- c(mean(x$x),mean(x$y))
+				ed <- sqrt(qchisq(ellipse.prob,df=2))
+				data.frame(sweep(circle.e %*% chol(sigma)*ed,2,mu,FUN='+'),
+					Condition=x$Condition[1])
+			})
+			if (!is.null(ell) && nrow(ell)>0) {
+				names(ell)[1:2] <- c("x","y")
+				pcaBiplot <- pcaBiplot +
+					geom_path(data=ell,aes(x=x,y=y,color=Condition,
+						group=Condition))
+			}
+            
             pcaBiplot <- pcaBiplot + 
                 xlab(paste("\nPrincipal Component ",i," (",pvarx,
                     "% of variance explained)",sep="")) +
@@ -600,21 +660,24 @@ mdsPcaTabPanelReactive <- function(input,output,session,
                     legend.key=element_blank()
                 ) +
                 scale_color_manual(values=classColors) +
-                scale_fill_manual(values=classColors)
-            #if (input$rnaMdsPcaTogglePointNames) {
-            #    require(ggrepel)
-            #    labs <- rownames(for.ggplot)
-            #    if (!is.null(currentMetadata$final$alt_id)) {
-            #        alt_id <- as.character(currentMetadata$final$alt_id)
-            #        names(alt_id) <- 
-            #            as.character(currentMetadata$final$sample_id)
-            #        # TCGA names hack
-            #        labs <- gsub("\\.","-",alt_id[rownames(for.ggplot)])
-            #    }
-            #    pcaBiplot <- pcaBiplot +
-            #        geom_text_repel(data=for.ggplot,mapping=aes(x=x,y=y,
-            #            label=labs),size=tsize)
-            #}
+                scale_fill_manual(values=classColors) +
+                geom_text(data=df.d,aes(x=x,y=y,label=Genes,angle=angle,
+					hjust=hjust),color='darkred',size=tsize)
+            
+            if (input$rnaMdsPcaTogglePointNames) {
+                require(ggrepel)
+                labels <- rownames(df.s)
+                if (!is.null(currentMetadata$final$alt_id)) {
+                    alt_id <- as.character(currentMetadata$final$alt_id)
+                    names(alt_id) <- 
+                        as.character(currentMetadata$final$sample_id)
+                    # TCGA names hack
+                    labels <- gsub("\\.","-",alt_id[rownames(df.s)])
+                }
+                pcaBiplot <- pcaBiplot +
+                    geom_text_repel(data=df.s,mapping=aes(x=x,y=y,
+                        label=labels),size=tsize)
+            }
             currentDimRed$pcaBiplotPlot <- pcaBiplot
         }
     })
@@ -826,7 +889,8 @@ mdsPcaTabPanelRenderUI <- function(output,session,allReactiveVars,
                     }
                     data.frame(
                         gene_name=gNames,
-                        dispMatrix
+                        dispMatrix,
+                        check.names=FALSE
                     )
                 },
                 class="display compact",
@@ -933,6 +997,202 @@ mdsPcaTabPanelRenderUI <- function(output,session,allReactiveVars,
     output$rnaPcaBiplotPlot <- renderPlot({
         currentDimRed$pcaBiplotPlot
     })
+    
+    output$exportRnaMdsPlotPDF <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("mds_plot_",tt,".pdf", sep='')
+        },
+        content=function(con) {
+            ggsave(filename=con,plot=currentDimRed$mdsPlot,width=7,height=7)
+        }
+    )
+    
+    output$exportRnaMdsPlotPNG <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("mds_plot_",tt,".png", sep='')
+        },
+        content=function(con) {
+            ggsave(filename=con,plot=currentDimRed$mdsPlot,width=7,height=7)
+        }
+    )
+    
+    output$exportRnaMdsPlotGG2 <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("mds_plot_",tt,".rda", sep='')
+        },
+        content=function(con) {
+            gg <- currentDimRed$mdsPlot
+            save(gg,file=con)
+        }
+    )
+    
+    output$exportRnaPcaScreePlotPDF <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("pcascree_plot_",tt,".pdf", sep='')
+        },
+        content=function(con) {
+            ggsave(filename=con,plot=currentDimRed$pcaScreePlot,
+				width=7,height=7)
+        }
+    )
+    
+    output$exportRnaPcaScreePlotPNG <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("pcascree_plot_",tt,".png", sep='')
+        },
+        content=function(con) {
+            ggsave(filename=con,plot=currentDimRed$pcaScreePlot,
+				width=7,height=7)
+        }
+    )
+    
+    output$exportRnaPcaScreePlotGG2 <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("pcascree_plot_",tt,".rda", sep='')
+        },
+        content=function(con) {
+            gg <- currentDimRed$pcaScreePlot
+            save(gg,file=con)
+        }
+    )
+    
+    output$exportRnaPcaScoresPlotPDF <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("pcascores_plot_",tt,".pdf", sep='')
+        },
+        content=function(con) {
+            ggsave(filename=con,plot=currentDimRed$pcaScoresPlot,
+				width=7,height=7)
+        }
+    )
+    
+    output$exportRnaPcaScoresPlotPNG <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("pcascores_plot_",tt,".png", sep='')
+        },
+        content=function(con) {
+            ggsave(filename=con,plot=currentDimRed$pcaScoresPlot,
+				width=7,height=7)
+        }
+    )
+    
+    output$exportRnaPcaScoresPlotGG2 <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("pcascores_plot_",tt,".rda", sep='')
+        },
+        content=function(con) {
+            gg <- currentDimRed$pcaScoresPlot
+            save(gg,file=con)
+        }
+    )
+    
+    output$exportRnaPcaLoadingsPlotPDF <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("pcaloadings_plot_",tt,".pdf", sep='')
+        },
+        content=function(con) {
+            ggsave(filename=con,plot=currentDimRed$pcaLoadingsPlot,
+				width=7,height=7)
+        }
+    )
+    
+    output$exportRnaPcaLoadingsPlotPNG <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("pcaloadings_plot_",tt,".png", sep='')
+        },
+        content=function(con) {
+            ggsave(filename=con,plot=currentDimRed$pcaLoadingsPlot,
+				width=7,height=7)
+        }
+    )
+    
+    output$exportRnaPcaLoadingsPlotGG2 <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("pcaloadings_plot_",tt,".rda", sep='')
+        },
+        content=function(con) {
+            gg <- currentDimRed$pcaLoadingsPlot
+            save(gg,file=con)
+        }
+    )
+    
+    output$exportRnaPcaRankedLoadingsPlotPDF <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("pcarankloadings_plot_",tt,".pdf", sep='')
+        },
+        content=function(con) {
+            ggsave(filename=con,plot=currentDimRed$pcaRankedLoadingsPlot,
+				width=7,height=7)
+        }
+    )
+    
+    output$exportRnaPcaRankedLoadingsPlotPNG <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("pcarankloadings_plot_",tt,".png", sep='')
+        },
+        content=function(con) {
+            ggsave(filename=con,plot=currentDimRed$pcaRankedLoadingsPlot,
+				width=7,height=7)
+        }
+    )
+    
+    output$exportRnaPcaRankedLoadingsPlotGG2 <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("pcarankloadings_plot_",tt,".rda", sep='')
+        },
+        content=function(con) {
+            gg <- currentDimRed$pcaRankedLoadingsPlot
+            save(gg,file=con)
+        }
+    )
+    
+    output$exportRnaPcaBiplotPlotPDF <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("pcabiplot_plot_",tt,".pdf", sep='')
+        },
+        content=function(con) {
+            ggsave(filename=con,plot=currentDimRed$pcaBiplotPlot,
+				width=7,height=7)
+        }
+    )
+    
+    output$exportRnaPcaBiplotPlotPNG <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("pcabiplot_plot_",tt,".png", sep='')
+        },
+        content=function(con) {
+            ggsave(filename=con,plot=currentDimRed$pcaBiplotPlot,
+				width=7,height=7)
+        }
+    )
+    
+    output$exportRnaPcaBiplotPlotGG2 <- downloadHandler(
+        filename=function() {
+            tt <- format(Sys.time(),format="%Y%m%d%H%M%S")
+            paste("pcabiplot_plot_",tt,".rda", sep='')
+        },
+        content=function(con) {
+            gg <- currentDimRed$pcaBiplotPlot
+            save(gg,file=con)
+        }
+    )
     
     output$helpTooManyRnaMdsPcaGeneNames <- renderUI({
         if (currentDimRed$tooManyGenes)

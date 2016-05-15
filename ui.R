@@ -58,6 +58,14 @@ shinyUI(fluidPage(
             },5)})"
         ))
     ),
+    #conditionalPanel(
+	#	condition="input.universeLoading",
+	#	div(
+	#		class="fullscreen",div(
+	#			class="splash","Starting SeqCVIBE..."
+	#		)
+	#	)
+    #),
     navbarPage(
         title="SeqCVIBE (beta)",
         tabPanel("Data selector",
@@ -91,10 +99,10 @@ shinyUI(fluidPage(
             ),
             tabPanel("MDS/PCA analysis",
                 mdsPcaTabPanel()
-            ),
-            tabPanel("GO/Pathway analysis",
-                goPathwayTabPanel()
-            )
+            )#,
+            #tabPanel("GO/Pathway analysis",
+            #    goPathwayTabPanel()
+            #)
         ),
         tabPanel("Genome browser",
             genomeBrowserTabPanel()

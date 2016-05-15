@@ -227,7 +227,32 @@ mdsPcaTabPanel <- function() {
                                 resetOnNew=TRUE
                             ),
                             height="640px"
-                        )
+                        ),
+                        fluidRow(br()),
+                        fluidRow(column(6,
+							div("")
+						),column(2,
+							downloadButton(
+								outputId="exportRnaMdsPlotGG2",
+								label="Export ggplot2",
+								#icon=icon("file-image-o"),
+								class="pull-right"
+							)
+						),column(2,
+							downloadButton(
+								outputId="exportRnaMdsPlotPNG",
+								label="Export PNG",
+								#icon=icon("file-image-o"),
+								class="pull-right"
+							)
+						),column(2,
+							downloadButton(
+								outputId="exportRnaMdsPlotPDF",
+								label="Export PDF",
+								#icon=icon("file-pdf-o"),
+								class="pull-right"
+							)
+						))
                     )
                 )
             ),
@@ -237,7 +262,32 @@ mdsPcaTabPanel <- function() {
                     id="rnaDimRedPcaPlots",
                     tabPanel(
                         title="Scree plot",
-                        plotOutput("rnaPcaScreePlot",height="640px")
+                        plotOutput("rnaPcaScreePlot",height="640px"),
+                        fluidRow(br()),
+                        fluidRow(column(6,
+							div("")
+						),column(2,
+							downloadButton(
+								outputId="exportRnaPcaScreePlotGG2",
+								label="Export ggplot2",
+								#icon=icon("file-image-o"),
+								class="pull-right"
+							)
+						),column(2,
+							downloadButton(
+								outputId="exportRnaPcaScreePlotPNG",
+								label="Export PNG",
+								#icon=icon("file-image-o"),
+								class="pull-right"
+							)
+						),column(2,
+							downloadButton(
+								outputId="exportRnaPcaScreePlotPDF",
+								label="Export PDF",
+								#icon=icon("file-pdf-o"),
+								class="pull-right"
+							)
+						))
                     ),
                     tabPanel(
                         title="Scores",
@@ -250,7 +300,32 @@ mdsPcaTabPanel <- function() {
                                 resetOnNew=TRUE
                             ),
                             height="640px"
-                        )
+                        ),
+                        fluidRow(br()),
+                        fluidRow(column(6,
+							div("")
+						),column(2,
+							downloadButton(
+								outputId="exportRnaPcaScoresPlotGG2",
+								label="Export ggplot2",
+								#icon=icon("file-image-o"),
+								class="pull-right"
+							)
+						),column(2,
+							downloadButton(
+								outputId="exportRnaPcaScoresPlotPNG",
+								label="Export PNG",
+								#icon=icon("file-image-o"),
+								class="pull-right"
+							)
+						),column(2,
+							downloadButton(
+								outputId="exportRnaPcaScoresPlotPDF",
+								label="Export PDF",
+								#icon=icon("file-pdf-o"),
+								class="pull-right"
+							)
+						))
                     ),
                     tabPanel(
                         title="Loadings 2D",
@@ -263,7 +338,32 @@ mdsPcaTabPanel <- function() {
                                 resetOnNew=TRUE
                             ),
                             height="640px"
-                        )
+                        ),
+                        fluidRow(br()),
+                        fluidRow(column(6,
+							div("")
+						),column(2,
+							downloadButton(
+								outputId="exportRnaPcaLoadingsPlotGG2",
+								label="Export ggplot2",
+								#icon=icon("file-image-o"),
+								class="pull-right"
+							)
+						),column(2,
+							downloadButton(
+								outputId="exportRnaPcaLoadingsPlotPNG",
+								label="Export PNG",
+								#icon=icon("file-image-o"),
+								class="pull-right"
+							)
+						),column(2,
+							downloadButton(
+								outputId="exportRnaPcaLoadingsPlotPDF",
+								label="Export PDF",
+								#icon=icon("file-pdf-o"),
+								class="pull-right"
+							)
+						))
                     ),
                     tabPanel(
                         title="Loadings 1D",
@@ -276,11 +376,61 @@ mdsPcaTabPanel <- function() {
                                 resetOnNew=TRUE
                             ),
                             height="640px"
-                        )
+                        ),
+                        fluidRow(br()),
+                        fluidRow(column(6,
+							div("")
+						),column(2,
+							downloadButton(
+								outputId="exportRnaPcaRankedLoadingsPlotGG2",
+								label="Export ggplot2",
+								#icon=icon("file-image-o"),
+								class="pull-right"
+							)
+						),column(2,
+							downloadButton(
+								outputId="exportRnaPcaRankedLoadingsPlotPNG",
+								label="Export PNG",
+								#icon=icon("file-image-o"),
+								class="pull-right"
+							)
+						),column(2,
+							downloadButton(
+								outputId="exportRnaPcaRankedLoadingsPlotPDF",
+								label="Export PDF",
+								#icon=icon("file-pdf-o"),
+								class="pull-right"
+							)
+						))
                     ),
                     tabPanel(
                         title="Biplot",
-                        plotOutput("rnaPcaBiplotPlot",height="640px")
+                        plotOutput("rnaPcaBiplotPlot",height="640px"),
+                        fluidRow(br()),
+                        fluidRow(column(6,
+							div("")
+						),column(2,
+							downloadButton(
+								outputId="exportRnaPcaBiplotPlotGG2",
+								label="Export ggplot2",
+								#icon=icon("file-image-o"),
+								class="pull-right"
+							)
+						),column(2,
+							downloadButton(
+								outputId="exportRnaPcaBiplotPlotPNG",
+								label="Export PNG",
+								#icon=icon("file-image-o"),
+								class="pull-right"
+							)
+						),column(2,
+							downloadButton(
+								outputId="exportRnaPcaBiplotPlotPDF",
+								label="Export PDF",
+								#icon=icon("file-pdf-o"),
+								class="pull-right"
+							)
+						))
                     )
                 )
             )

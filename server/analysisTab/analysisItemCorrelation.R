@@ -1,6 +1,7 @@
 correlationTabPanelEventReactive <- function(input,output,session,
     allReactiveVars,allReactiveMsgs) {
     currentMetadata <- allReactiveVars$currentMetadata
+    currentPipelineOutput <- allReactiveVars$currentPipelineOutput
     currentCustomRnaTables <- allReactiveVars$currentCustomRnaTables
     currentCorrelation <- allReactiveVars$currentCorrelation
         
@@ -27,6 +28,20 @@ correlationTabPanelEventReactive <- function(input,output,session,
                 if (input$rnaCorrelateWhat=="refgene" 
                     && !isEmpty(input$rnaCorrelationRefGene))
                     g <- unique(c(input$rnaCorrelationRefGene,g))
+            },
+            expr = {
+                if (is.null(currentPipelineOutput$counts)) {
+                    output$rnaCorrelationSettingsError <- renderUI({
+                        div(class="error-message",paste("You must execute a ",
+                            "differential expression analysis first!",sep=""))
+                    })
+                    return()
+                }
+                else {
+                    output$rnaCorrelationSettingsError <- renderUI({div()})
+                    g <- names(which(apply(currentPipelineOutput$flags,1,
+						function(x) all(x==0))))
+                }
             },
             custom = {
                 g <- input$rnaCorrelationCustomList
