@@ -1,14 +1,13 @@
 # server.R
 
 # Load required libraries
-#require(shiny)
-#require(shinyjs)
-source("config/init.R")
+source("config/init_server_globals.R")
+
 shinyServer(
     function(input,output,session) {
-        # Load init script
-        source("config/init.R")
-		# Load SeqCVIBE libs
+        # Load init packages script
+        source("config/init_packages.R")
+        # Load SeqCVIBE libs
         source("server/reactiveVars.R",local=TRUE)
         source("server/dataSelectorTab/dataSelectorItem.R",local=TRUE)
         source("server/signalViewerTab/signalViewerItemGeneSignal.R",local=TRUE)
@@ -23,21 +22,9 @@ shinyServer(
         source("server/analysisTab/analysisItemMdsPca.R",local=TRUE)
         source("server/genomeBrowserTab/genomeBrowserItem.R",local=TRUE)
         
-        # Init some variables in SeqCVIBE universe
-        universe <- initUniverse(session)
-		metadata <- universe$metadata
-		sources <- universe$sources
-		datasets <- universe$datasets
-		classes <- universe$classes
-		genomes <- universe$genomes
-		baseColours <- universe$baseColours
-		loadedGenomes <- universe$loadedGenomes
-		loadedData <- universe$loadedData
-		statScoreValues <- universe$statScoreValues
-		fcNatValues <- universe$fcNatValues
-		geneNames <- universe$geneNames
-		RC <- universe$RC
-		
+        # Init packages
+        initPackages(session)
+        
         # Make %#^%$^%$@( globals visible AND changeable
         makeReactiveBinding("loadedGenomes")
         makeReactiveBinding("loadedData")

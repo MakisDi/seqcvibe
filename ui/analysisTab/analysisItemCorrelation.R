@@ -44,11 +44,11 @@ correlationTabPanel <- function() {
                             )
                         ),
                         div(
-							class="small",
-							helpText(paste("*Passing the filters in the ",
-								"differential expression analysis tab (an ",
-								"analysis must have run first).",sep=""))
-						)
+                            class="small",
+                            helpText(paste("*Passing the filters in the ",
+                                "differential expression analysis tab (an ",
+                                "analysis must have run first).",sep=""))
+                        )
                     )),
                     fluidRow(column(12,
                         h4("Expression measurement"),

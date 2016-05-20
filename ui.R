@@ -3,7 +3,7 @@
 require(DT)
 require(shinyjs)
 
-source("config/init.R")
+source("config/init_server_globals.R")
 source("ui/dataSelectorTab/dataSelectorItem.R")
 source("ui/signalViewerTab/signalViewerItemGeneSignal.R")
 source("ui/signalViewerTab/signalViewerItemAreaSignal.R")
@@ -55,68 +55,75 @@ shinyUI(fluidPage(
                     'from': 10,
                     'to': 20
                 });
+                // Logout button functionality
+                $('a[href^=#tab-][href$=-8]').on('click',function() {
+                    window.location.href = 
+                        'https://fleming.eu.auth0.com/v2/logout';
+                });
             },5)})"
         ))
     ),
     #conditionalPanel(
-	#	condition="input.universeLoading",
-	#	div(
-	#		class="fullscreen",div(
-	#			class="splash","Starting SeqCVIBE..."
-	#		)
-	#	)
+    #   condition="input.universeLoading",
+    #   div(
+    #       class="fullscreen",div(
+    #           class="splash","Starting SeqCVIBE..."
+    #       )
+    #   )
     #),
     navbarPage(
-        title="SeqCVIBE (beta)",
-        tabPanel("Data selector",
+        id="seqcnavbar",
+        title="SeqCVIBE",
+        tabPanel("Data selector",icon=icon("database"),
             dataSelectorTabPanel()
         ),
-        navbarMenu("Signal viewer",
-            tabPanel("Gene signal",
+        navbarMenu("Signal viewer",icon=icon("signal"),
+            tabPanel("Gene signal",icon=icon("bar-chart"),
                 geneSignalTabPanel()
             ),
-            tabPanel("Area signal",
+            tabPanel("Area signal",icon=icon("area-chart"),
                 areaSignalTabPanel()
             )
         ),
-        navbarMenu("Expression viewer",
-            tabPanel("Known genes",
+        navbarMenu("Expression viewer",icon=icon("eye"),
+            tabPanel("Known genes",icon=icon("table"),
                 expressionExplorerTabPanel()
             ),
-            tabPanel("Calculator",
+            tabPanel("Calculator",icon=icon("calculator"),
                 expressionCalculatorTabPanel()
             )
         ),
-        navbarMenu("Analysis",
-            tabPanel("Differential expression",
+        navbarMenu("Analysis",icon=icon("flask"),
+            tabPanel("Differential expression",icon=icon("star-half-o"),
                 differentialExpressionTabPanel()
             ),
-            tabPanel("Clustering analysis",
+            tabPanel("Clustering analysis",icon=icon("sitemap"),
                 clusteringTabPanel()
             ),
-            tabPanel("Correlation analysis",
+            tabPanel("Correlation analysis",icon=icon("line-chart"),
                 correlationTabPanel()
             ),
-            tabPanel("MDS/PCA analysis",
+            tabPanel("MDS/PCA analysis",icon=icon("cube"),
                 mdsPcaTabPanel()
             )#,
             #tabPanel("GO/Pathway analysis",
             #    goPathwayTabPanel()
             #)
         ),
-        tabPanel("Genome browser",
+        tabPanel("Genome browser",icon=icon("map-o"),
             genomeBrowserTabPanel()
         ),
-        navbarMenu("Help",
-            tabPanel("Documentation",
+        navbarMenu("Help",icon=icon("question"),
+            tabPanel("Documentation",icon=icon("book"),
                 docTabPanel()
             ),
-            tabPanel("FAQ",
+            tabPanel("FAQ",icon=icon("question-circle"),
                 faqTabPanel()
             )
         ),
-        tabPanel("About",
+        tabPanel("About",icon=icon("user"),
             fluidRow(column(12,includeHTML("www/about.html")))
-        )
+        ),
+        tabPanel("Logout",icon=icon("sign-out"))
     )
 ))

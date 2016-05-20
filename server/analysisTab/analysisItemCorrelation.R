@@ -40,7 +40,7 @@ correlationTabPanelEventReactive <- function(input,output,session,
                 else {
                     output$rnaCorrelationSettingsError <- renderUI({div()})
                     g <- names(which(apply(currentPipelineOutput$flags,1,
-						function(x) all(x==0))))
+                        function(x) all(x==0))))
                 }
             },
             custom = {
@@ -118,6 +118,7 @@ correlationTabPanelEventReactive <- function(input,output,session,
         if (!is.null(currentMetadata$final$alt_id))
             colnames(tab) <- as.character(currentMetadata$final$alt_id)
         
+        currentCorrelation$tooManyGenesAlert <- FALSE
         switch(input$rnaCorrelateWhat,
             samples = {
                 currentCorrelation$what <- "samples"
@@ -128,14 +129,20 @@ correlationTabPanelEventReactive <- function(input,output,session,
             allgenes = {
                 currentCorrelation$what <- "genes"
                 currentCorrelation$refGene <- NULL
-                currentCorrelation$corMatrix <- cor(t(tab),
-                    method=input$rnaCorrelationMethod)
+                if (nrow(tab)>1000)
+                    currentCorrelation$tooManyGenesAlert <- TRUE
+                else
+                    currentCorrelation$corMatrix <- cor(t(tab),
+                        method=input$rnaCorrelationMethod)
             },
             refgene = {
                 currentCorrelation$what <- "genes"
                 currentCorrelation$refGene <- input$rnaCorrelationRefGene
-                currentCorrelation$corMatrix <- cor(t(tab),
-                    method=input$rnaCorrelationMethod)
+                if (nrow(tab)>1000)
+                    currentCorrelation$tooManyGenesAlert <- TRUE
+                else
+                    currentCorrelation$corMatrix <- cor(t(tab),
+                        method=input$rnaCorrelationMethod)
             }
         )
         
@@ -164,7 +171,16 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
     currentCorrelation <- allReactiveVars$currentCorrelation
     
     output$correlationOutput <- renderUI({
-        if (is.null(currentCorrelation$corMatrix)) {
+        if (currentCorrelation$tooManyGenesAlert) {
+            output$correlation <- renderPlot({
+                ggmessage(msg=paste("Cannot calculate pairwise correlations\n",
+                    "for more than 1000 genes asit will\ntake very long.",
+                    " Please restrict the number\nof selected\ngenes and try",
+                    "again"),type="warning")
+            })
+            plotOutput("correlation",height="640px")
+        }
+        else if (is.null(currentCorrelation$corMatrix)) {
             output$correlation <- renderPlot({
                 currentCorrelation$entryCor
             })
@@ -238,6 +254,7 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
                 plotOutput("correlation",height="640px")
             }
             else if (all(dim(currentCorrelation$corMatrix)>100)) {
+                require(gplots)
                 # Switch to static image
                 cc <- unique(as.character(currentMetadata$final$class))
                 classList <- vector("list",length(cc))
@@ -413,7 +430,7 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
             )
         )
     })
-    
+
     output$rnaCorDataMatrix <- DT::renderDataTable(
         if (is.null(currentCorrelation$datMatrix))
             data.frame(

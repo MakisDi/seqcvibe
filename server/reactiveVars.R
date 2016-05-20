@@ -158,7 +158,8 @@ initReactiveVars <- function() {
             method="pearson",
             symm=FALSE,
             colors=c("#FFFF00","#BEBEBE","#0000FF")
-        )
+        ),
+        tooManyGenesAlert=FALSE
     )
     
     currentDimRed <- reactiveValues(
@@ -363,6 +364,7 @@ clearReactiveVars <- function(allReactiveVars) {
         symm=FALSE,
         colors=c("#FFFF00","#BEBEBE","#0000FF")
     )
+    allReactiveVars$currentCorrelation$tooManyGenesAlert=FALSE
         
     allReactiveVars$currentDimRed$datMatrix <- NULL
     allReactiveVars$currentDimRed$selMatrix <- NULL
