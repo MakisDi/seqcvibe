@@ -147,7 +147,7 @@ correlationTabPanel <- function() {
                 fluidRow(column(12,
                     colourInput(
                         inputId="corrColourHigh",
-                        label="High correlation",
+                        label="Correlation",
                         value="#0000FF"
                     ),
                     colourInput(
@@ -157,7 +157,7 @@ correlationTabPanel <- function() {
                     ),
                     colourInput(
                         inputId="corrColourLow",
-                        label="Low correlation",
+                        label="Anti-correlation",
                         value="#FFFF00"
                     )
                 )),

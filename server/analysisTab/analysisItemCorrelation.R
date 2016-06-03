@@ -189,6 +189,9 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
         else {
             require(reshape)
             if (!is.null(currentCorrelation$refGene)) {
+                output$correlation <- renderUI(div())
+                htmlOutput("correlation",height="640px")
+                
                 s <- currentMetadata$source
                 d <- currentMetadata$dataset
                 cc <- currentMetadata$final$class
@@ -196,7 +199,6 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
                 r <- currentCorrelation$refGene
                 x <- D[r,]
                 D <- D[setdiff(rownames(D),r),]
-                
                 if (nrow(D)>1000)
                     pwCorrPlot <- ggmessage(paste("Cannot create gene-wise",
                         "correlation plot with more than 1000 genes"),
@@ -222,12 +224,22 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
                         Condition=rep(cc,nrow(D))
                     )
                     
-                    pwCorrPlot <- ggplot() +
-                        geom_point(data=pwCorrData,aes(x=X,y=Y,
-                            colour=Condition,fill=Condition,shape=Gene),
-                            size=2) +
-                        geom_line(data=pwCorrData,aes(x=X,y=Y,linetype=Gene),
-                            colour="#AEAEAE") +
+                    if (length(levels(melted$X2))>6)
+                        pwCorrPlot <- ggplot() +
+                            geom_line(data=pwCorrData,aes(x=X,y=Y,
+                                colour=Gene)) +
+                            geom_point(data=pwCorrData,aes(x=X,y=Y,
+                                colour=Gene,shape=Condition),size=2)
+                            #,colour="#AEAEAE")
+                    else
+                        pwCorrPlot <- ggplot() +
+                            geom_point(data=pwCorrData,aes(x=X,y=Y,
+                                colour=Condition,fill=Condition,shape=Gene),
+                                size=2) +
+                            geom_line(data=pwCorrData,aes(x=X,y=Y,
+                                linetype=Gene),colour="#AEAEAE")
+                        
+                    pwCorrPlot <- pwCorrPlot +
                         xlab(paste("Reference expression (",rg,")",sep="")) +
                         ylab("Expression of query genes\n") +
                         theme_bw() +
@@ -281,10 +293,10 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
                         ColSideColors=classes
                     )
                 })
-                div(
-                    class="heatmap-container",
+                #div(
+                #    class="heatmap-container",
                     plotOutput("correlation",height="640px")
-                )
+                #)
             }
             else {
                 if (currentCorrelation$what=="genes") {
@@ -307,10 +319,10 @@ correlationTabPanelRenderUI <- function(output,session,allReactiveVars,
                         labCol=labcol
                     )
                 })
-                div(
-                    class="heatmap-container",
+                #div(
+                #    class="heatmap-container",
                     d3heatmapOutput("correlation",height="640px")
-                )
+                #)
             }
         }
     })
@@ -666,6 +678,14 @@ correlationTabPanelObserve <- function(input,output,session,
                 )
             }
         }
+    })
+    
+    observe({
+        if (input$rnaCorrelateWhat=="refgene" 
+            && isEmpty(input$rnaCorrelationRefGene))
+            shinyjs::disable("performRnaCorrelation")
+        else
+            shinyjs::enable("performRnaCorrelation")
     })
     
     observe({

@@ -222,8 +222,8 @@ initReactiveMsgs <- function() {
             list(
                 type="INFO",
                 msg=paste(getTime("INFO"),"Welcome to the data selector of ",
-                    "BigSeqCVis! This is an info message. Make your ",
-                    "selections on the left.")
+                    "SeqCVIBE! This is an info message. Make your selections ",
+                    "on the left.")
             )
         )
     )
@@ -232,9 +232,9 @@ initReactiveMsgs <- function() {
         messages=list(
             list(
                 type="INFO",
-                msg=paste(getTime("INFO"),"Welcome to the gene selector of ",
-                    "BigSeqCVis! This is an info message. Make your ",
-                    "selections on the left.")
+                msg=paste(getTime("INFO"),"Welcome to the gene signal ",
+                    "explorer of SeqCVIBE! This is an info message. Make ",
+                    "your selection on the left.")
             )
         )
     )
@@ -243,9 +243,9 @@ initReactiveMsgs <- function() {
         messages=list(
             list(
                 type="INFO",
-                msg=paste(getTime("INFO"),"Welcome to the area explorer ",
-                    "of BigSeqCVis! This is an info message. Make your ",
-                    "selections on the left.")
+                msg=paste(getTime("INFO"),"Welcome to the area signal ",
+                    "explorer of SeqCVIBE! This is an info message. Make ",
+                    "your selection on the left.")
             )
         )
     )
@@ -394,7 +394,7 @@ clearReactiveVars <- function(allReactiveVars) {
     allReactiveVars$currentDimRed$pcaRankedLoadingsPlot <-
             ggmessage(paste("Resulting PCA ranked loadings plots\nwill be ",
                 "displayed here",sep=""))
-    allReactiveVars$currentDimRed$pcaBiplot <-
+    allReactiveVars$currentDimRed$pcaBiplotPlot <-
             ggmessage("Resulting PCA biplots plots\nwill be displayed here")
     allReactiveVars$currentDimRed$tooManyGenes <- FALSE
     

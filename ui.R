@@ -58,7 +58,7 @@ shinyUI(fluidPage(
                 // Logout button functionality
                 $('a[href^=#tab-][href$=-8]').on('click',function() {
                     window.location.href = 
-                        'https://fleming.eu.auth0.com/v2/logout';
+                        'https://fleming.eu.auth0.com/v2/logout?returnTo=http://www.fleming.gr/';
                 });
             },5)})"
         ))

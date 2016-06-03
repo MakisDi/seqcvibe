@@ -955,9 +955,11 @@ calcCoverageFromBW <- function(input,mask,assign.names=TRUE,verbose=TRUE) {
 }
 
 loadJBrowse <- function(source,dataset,config,org="hg19") {
-    urlBase <- "http://epigenomics.fleming.gr/seqcbrowse/index.html?"
-    
-    tracksBase <- paste("http://epigenomics.fleming.gr/seqcvibe_tracks",
+    #urlBase <- paste("https://www.google.com/search?q=%",
+    #    "http://epigenomics.fleming.gr/seqcbrowse/index.html?",
+    #    "&btnI=Im+Feeling+Lucky",sep="")
+    urlBase <- "https://epigenomics.fleming.gr/seqcbrowse/index.html?"
+    tracksBase <- paste("https://epigenomics.fleming.gr/seqcvibe_tracks",
         org,sep="/")
     
     ind <- which(as.character(config$source)==source 

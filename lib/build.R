@@ -558,7 +558,8 @@ buildTrackList  <- function(config,annoPath,urlBase,appBase="") {
             simplifyVector=FALSE)
             
         # Construct the rest of the tracks to merge with annoTracks...
-        tracksXY <- dlply(config,"sample_id",function(x,poscol,negcol) {
+        tracksXY <- dlply(config[config$genome==org,,drop=FALSE],"sample_id",
+            function(x,poscol,negcol) {
             list(
                 metadata=list(
                     Source=as.character(x$source),
@@ -584,7 +585,8 @@ buildTrackList  <- function(config,annoPath,urlBase,appBase="") {
                     x$class,"/",x$sample_id,".bigWig",sep="")
             )
         },posBaseColours,negBaseColours)
-        tracksDen <- dlply(config,"sample_id",function(x,poscol,negcol) {
+        tracksDen <- dlply(config[config$genome==org,,drop=FALSE],"sample_id",
+            function(x,poscol,negcol) {
             list(
                 metadata=list(
                     Source=as.character(x$source),
@@ -695,3 +697,15 @@ buildLibsizeFile <- function(rdas,lsFile) {
 #2219236
 #2232100
 
+## Build track list example
+#config <- read.delim("/media/raid/software/seqcvibe/config/metadata.txt")
+#annoPath <- "/media/raid/tracks/seqcvibe/reference"
+#appBase <- "/media/raid/software/seqcvibe"
+#urlBase <- "https://epigenomics.fleming.gr/tracks"
+#buildTrackList(
+#    config=config,
+#    annoPath=annoPath,
+#    urlBase=urlBase,
+#    appBase=appBase
+#)
+#perl buildReferenceTracks.pl --config ../config/config_jbrowse_build.json --genomes --features --update --ncores 5
