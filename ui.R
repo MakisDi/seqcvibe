@@ -57,8 +57,7 @@ shinyUI(fluidPage(
                 });
                 // Logout button functionality
                 $('a[href^=#tab-][href$=-8]').on('click',function() {
-                    window.location.href = 
-                        'https://fleming.eu.auth0.com/v2/logout?returnTo=http://www.fleming.gr/';
+                    window.location.href =  'https://fleming.eu.auth0.com/v2/logout?returnTo=http://www.fleming.gr&client_id=0iezxzzsfxVDWiE0XaXnYdkDsS91f1zF';
                 });
             },5)})"
         ))

@@ -237,7 +237,8 @@ bam2count <- function(targets,annotation,rc=NULL) {
             }
             else {
                 warning("Information regarding single- or paired-end ",
-                    "reads is not correctly provided! Assuming single...")
+                    "reads is not correctly provided! Assuming single...",
+                    immediate.=TRUE)
                 singleEnd <- TRUE
                 fragments <- FALSE
                 asMates <- FALSE
@@ -256,7 +257,8 @@ bam2count <- function(targets,annotation,rc=NULL) {
                 ignore.strand <- TRUE
             else {
                 warning("Information regarding strandedness of the reads ",
-                    "is not correctly provided! Assuming unstranded...")
+                    "is not correctly provided! Assuming unstranded...",
+                    immediate.=TRUE)
                 ignore.strand <- TRUE
             }
         }
@@ -293,13 +295,13 @@ bam2count <- function(targets,annotation,rc=NULL) {
             if (is.remote)
                 message("    ...for remote BAM file... might take longer...")
             counts <- tryCatch(
-                summarizeOverlaps(annotation.gr,reads,singleEnd=singleEnd,
-                    fragments=fragments,ignore.strand=ignore.strand),
+                summarizeOverlaps(annotation.gr,reads),#singleEnd=singleEnd,
+                    #fragments=fragments,ignore.strand=ignore.strand),
                 error=function(e) {
                     message("Caught error while reading BAM file: ",
                     sample.files[n])
                     message("====================")
-                    #print(e)
+                    print(e)
                     message("====================")
                     return(NULL)
                 },finally=""
